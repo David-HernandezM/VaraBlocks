@@ -1,0 +1,21 @@
+[package]
+name = "main-contract"
+version.workspace = true
+edition.workspace = true
+
+[dependencies]
+gstd.workspace = true
+main-contract-io.workspace = true
+gmeta.workspace = true
+
+[dev-dependencies]
+#program-state = {workspace = true, features = ["binary-vendor"]}
+gtest.workspace = true
+
+[build-dependencies]
+gear-wasm-builder.workspace = true
+main-contract-io.workspace = true
+gmeta.workspace = true
+
+[features]
+binary-vendor = []
