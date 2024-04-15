@@ -26,7 +26,7 @@ pub enum VecTypes {
 #[scale_info(crate = gstd::scale_info)]
 pub enum Types {
     // HashMapVal(HashMapTypes),
-    VecVal(VecTypes),
+    // VecVal(VecTypes),
     ActorIdVal(ActorId),
     INumVal(i64),
     UNumVal(u64),

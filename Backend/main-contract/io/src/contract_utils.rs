@@ -75,17 +75,12 @@ impl VirtualContract {
     }
 
     pub fn send_message_to(to: ActorId, message: EnumVal) {
-        // ln!("MANDANDO MENSAJE A {to}");
-        // println!("Enum: {}, variante: {}\n", message.enum_from, message.val);
-        // msg::send()
         msg::send(to, ContractEvent::MeesageOfVirtualContract(message), 0)
             .expect("Error sending reply");
     }
 
 
     pub fn send_message_reply(message: EnumVal) {
-        // println!("MANDANDO MENSAJE REPLY A MI PROPIA ADDRESS");
-        // println!("Enum: {}, variante: {}\n", message.enum_from, message.val);
         msg::send(msg::source(), ContractEvent::MeesageOfVirtualContract(message), 0)
             .expect("Error sending reply");
     }
