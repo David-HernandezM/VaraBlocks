@@ -1,14 +1,19 @@
 use gstd::{prelude::*, ActorId};
 
 pub type Scope = u32;
-use super::contract_enum::{
+
+use super::virtual_contract_enum::{
     EnumName,
     EnumVal
 };
-use super::contract_types::Types;
+use super::virtual_contract_state_handlers::StateAttributeToModify;
+use super::virtual_contract_types::VirtualContractTypes;
 
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub enum CodeBlock {
-    ModifyState(),
+    ModifyState(StateAttributeToModify),
     ControlFlow(ControlFlow),
     Variable(Variable),
     Assignment {
@@ -23,10 +28,16 @@ pub enum CodeBlock {
     SendReply {
         message: EnumVal,
     },
-    Return(Types)
+    Return(VirtualContractTypes),
+    Test(String),
+    Test2(Variable),
+    test3(ControlFlow),
 }
 
 
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub enum BooleanExpressionTypes {
     Equal, 
     NotEqual,
@@ -36,20 +47,22 @@ pub enum BooleanExpressionTypes {
     LessThanEqual
 }
 
-
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub enum BooleanExpression {
     Simple {
-        first: Types,
-        second: Types,
+        first: VirtualContractTypes,
+        second: VirtualContractTypes,
         expression_type: BooleanExpressionTypes
     },
     FirstComplex {
         first: Variable,
-        second: Types,
+        second: VirtualContractTypes,
         expression_type: BooleanExpressionTypes
     },
     SecondComplex {
-        first: Types,
+        first: VirtualContractTypes,
         second: Variable,
         expression_type: BooleanExpressionTypes
     },
@@ -58,13 +71,16 @@ pub enum BooleanExpression {
         second: Variable,
         expression_type: BooleanExpressionTypes
     },
-    ComplexExpression {
-        first: Box<BooleanExpression>,
-        second: Box<BooleanExpression>,
-        expression_type: BooleanExpressionTypes
-    }
+    // ComplexExpression {
+    //     first: Box<BooleanExpression>,
+    //     second: Box<BooleanExpression>,
+    //     expression_type: BooleanExpressionTypes
+    // }
 }
 
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub enum ControlFlow {
     If {
         boolean_expresion: BooleanExpression, 
@@ -87,27 +103,35 @@ pub enum ControlFlow {
 }
 
 
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub enum AssignmentType {
-    Add(Types),
-    Subtract(Types),
-    Multiply(Types),
-    Divide(Types),
-    Module(Types),
-    NewValue(Types)
+    Add(VirtualContractTypes),
+    Subtract(VirtualContractTypes),
+    Multiply(VirtualContractTypes),
+    Divide(VirtualContractTypes),
+    Module(VirtualContractTypes),
+    NewValue(VirtualContractTypes)
 }
 
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub struct Assignment {
     pub variable_name: String,
-    pub assignment_type: Types,
+    pub assignment_type: VirtualContractTypes,
     pub assign: AssignmentType
 }
 
-#[derive(Clone)]
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub struct Variable {
     pub variable_name: String,
     pub is_mutable: bool,
-    pub var_value: Types,
-    pub var_type: Types,
+    pub var_value: VirtualContractTypes,
+    pub var_type: VirtualContractTypes,
     pub is_parameter: bool
 }
 
@@ -115,28 +139,28 @@ impl Variable {
     pub fn types_are_correct(&self) -> bool {
         let var_value = &self.var_value;
         match self.var_type {
-            Types::Enum => {
-                if let Types::EnumVal(_) = var_value {
+            VirtualContractTypes::Enum => {
+                if let VirtualContractTypes::EnumVal(_) = var_value {
                     return true;
                 }
             },
-            Types::INum => {
-                if let Types::INumVal(_) = var_value {
+            VirtualContractTypes::INum => {
+                if let VirtualContractTypes::INumVal(_) = var_value {
                     return true;
                 }
             },
-            Types::UNum => {
-                if let Types::INumVal(_) = var_value {
+            VirtualContractTypes::UNum => {
+                if let VirtualContractTypes::INumVal(_) = var_value {
                     return true;
                 }
             },
-            Types::String => {
-                if let Types::StringVal(_) = var_value {
+            VirtualContractTypes::String => {
+                if let VirtualContractTypes::StringVal(_) = var_value {
                     return true;
                 }
             },
-            Types::Boolean => {
-                if let Types::BooleanVal(_) = var_value {
+            VirtualContractTypes::Boolean => {
+                if let VirtualContractTypes::BooleanVal(_) = var_value {
                     return true;
                 }
             },
@@ -147,7 +171,7 @@ impl Variable {
     }
 
     pub fn variable_type_is_enum(&self) -> bool {
-        if let Types::Enum = self.var_type {
+        if let VirtualContractTypes::Enum = self.var_type {
             true
         } else {
             false
@@ -155,9 +179,10 @@ impl Variable {
     } 
 }
 
+#[derive(Debug)]
 pub struct Function {
     pub function_name: String,
     pub parameters: Vec<Variable>,
-    pub return_type: Types,
+    pub return_type: VirtualContractTypes,
     pub body: Vec<CodeBlock>
 }

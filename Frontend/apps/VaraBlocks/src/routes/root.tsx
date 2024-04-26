@@ -1,7 +1,6 @@
 import { Account, useAccount, useApi } from "@gear-js/react-hooks";
 import { Outlet, useOutletContext } from "react-router-dom";
 import { Header } from "@/components";
-import { useState } from "react";
 import { GearApi } from "@gear-js/api";
 import { ApiLoader } from '@/components';
 

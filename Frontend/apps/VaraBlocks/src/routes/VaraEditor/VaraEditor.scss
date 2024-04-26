@@ -1,0 +1,76 @@
+.varaeditor {
+    // outline: solid white 1px;
+    width: 100vw;
+    // height: 63.8rem;
+
+    & > * {
+        width: 100%;
+    }
+}
+
+.varaeditor__edition-options {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 40px;
+    margin-top: 10px;
+    margin-bottom: 5px;
+    padding-left: 40px;
+    width: fit-content;
+    color: white;
+    height: 50px;
+
+    & > * {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-width: 140px;
+        height: 40px;
+        border: 1px white solid;
+        border-radius: 20px;
+        transition: all ease-in-out 0.3s;
+    }
+}
+
+.varaeditor__edition-options--selected {
+    color: black;
+    font-weight: bold;
+    border: none;
+    background-color: #27B435;
+}
+
+
+.varaeditor__container {
+    // background-color: white;
+    height: 59.7rem;
+
+    & > * {
+        height: 100%;
+        width: 100%;
+    }
+}
+
+.varaeditor__contract-editor {
+    display: flex;
+}
+
+.varaeditor__contract-editor-data {
+    width: 300px;
+    outline: white 1px solid;
+}
+
+.varaeditor__contract-editor-logic {
+    width: 100%;
+}
+
+.varaeditor__structs-editor {
+}
+
+.varaeditor__enums-editor {
+    display: flex;
+    flex-wrap: wrap;
+    align-content:flex-start;
+    gap: 20px;
+    padding: 10px 20px 20px 20px;
+    overflow-y: auto;
+}

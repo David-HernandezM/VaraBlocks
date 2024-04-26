@@ -4,6 +4,7 @@ import {AnimateLayoutChanges, useSortable} from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
 
 import {TreeItem, Props as TreeItemProps} from './TreeItem';
+import { BlockType } from '../../types';
 import {iOS} from '../../utilities';
 
 interface Props extends TreeItemProps {
@@ -49,3 +50,4 @@ export function SortableTreeItem({id, depth, ...props}: Props) {
     />
   );
 }
+

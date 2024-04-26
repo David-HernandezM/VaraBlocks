@@ -11,13 +11,18 @@ pub struct EnumVal {
     pub val: String
 }
 
-
+#[derive(Encode, Decode, TypeInfo, Clone)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub struct ContractEnum {
     pub enum_name: EnumName,
     pub enum_type: ContractEnumType, 
     pub variants: Vec<String>
 }
 
+#[derive(Encode, Decode, TypeInfo, Clone)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub enum ContractEnumType {
     ContractInitActions,
     ContractInitEvents,

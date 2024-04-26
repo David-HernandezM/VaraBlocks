@@ -4,6 +4,8 @@ import Index from "./index/Index";
 import Account from "./account/Account";
 import XorDemoNN from "./xor-demo-nn/XorDemoNN";
 import DoodleDemoNN from "./doodle-demo-nn/DoodleDemoNN";
+import VaraEditor from "./VaraEditor/VaraEditor";
+
 
 export {
     Root,
@@ -11,5 +13,6 @@ export {
     Index,
     Account,
     XorDemoNN,
-    DoodleDemoNN
+    DoodleDemoNN,
+    VaraEditor
 };

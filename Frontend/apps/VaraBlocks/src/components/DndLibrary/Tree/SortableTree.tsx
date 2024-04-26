@@ -38,33 +38,10 @@ import type {FlattenedItem, SensorContext, TreeItems} from './types';
 import {sortableTreeKeyboardCoordinates} from './keyboardCoordinates';
 import {SortableTreeItem} from './components';
 import {CSS} from '@dnd-kit/utilities';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { setBlocks } from '@/app/SliceReducers/VaraBlocksData/varaBlocksDataSlice';
 
-const initialItems: TreeItems = [
-  {
-    id: 'Home',
-    children: [],
-  },
-  {
-    id: 'Collections',
-    children: [
-      {id: 'Spring', children: []},
-      {id: 'Summer', children: []},
-      {id: 'Fall', children: []},
-      {id: 'Winter', children: []},
-    ],
-  },
-  {
-    id: 'About Us',
-    children: [],
-  },
-  {
-    id: 'My Account',
-    children: [
-      {id: 'Addresses', children: []},
-      {id: 'Order History', children: []},
-    ],
-  },
-];
+
 
 const measuring = {
   droppable: {
@@ -110,11 +87,14 @@ export function SortableTree({
   setItems,
   collapsible,
   // defaultItems = initialItems,
-  indicator = false,
+  indicator = true,
   indentationWidth = 50,
   removable = true
 }: Props) {
   // const [items, setItems] = useState(() => defaultItems);
+  const varaBlocksState = useAppSelector((state) => state.varaBlocksTree.blocks);
+  const varaBlocksDispatch = useAppDispatch();
+
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
   const [overId, setOverId] = useState<UniqueIdentifier | null>(null);
   const [offsetLeft, setOffsetLeft] = useState(0);
@@ -124,18 +104,28 @@ export function SortableTree({
   } | null>(null);
 
   const flattenedItems = useMemo(() => {
-    const flattenedTree = flattenTree(items);
-    const collapsedItems = flattenedTree.reduce<string[]>(
+    const flattenedTree = flattenTree(varaBlocksState);//flattenTree(items);
+    console.log('FLATTEN TREE');
+    console.log(flattenedTree);
+
+    // console.log(flattenedTree[4].children[0]);
+
+
+    
+    const collapsedItems = flattenedTree.reduce<UniqueIdentifier[]>(
       (acc, {children, collapsed, id}) =>
-        collapsed && children.length ? [...acc, id] : acc,
-      []
+        collapsed && children.length ? [...acc, id] : acc, []
     );
+
+    console.log('Collapsed iterms:');
+    console.log(collapsedItems);
+    
 
     return removeChildrenOf(
       flattenedTree,
       activeId ? [activeId, ...collapsedItems] : collapsedItems
     );
-  }, [activeId, items]);
+  }, [activeId, varaBlocksState]);//[activeId, items]);
 
   const projected = activeId && overId
       ? getProjection(
@@ -205,10 +195,11 @@ export function SortableTree({
       onDragCancel={handleDragCancel}
     >
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
-        {flattenedItems.map(({id, children, collapsed, depth}) => (
+        {flattenedItems.map(({id, blockType, children, collapsed, depth}) => (
           <SortableTreeItem
             key={id}
             id={id}
+            blockType={blockType}
             value={id}
             depth={id === activeId && projected ? projected.depth : depth}
             indentationWidth={indentationWidth}
@@ -231,8 +222,9 @@ export function SortableTree({
               <SortableTreeItem
                 id={activeId}
                 depth={activeItem.depth}
+                blockType={activeItem.blockType}
                 clone
-                childCount={getChildCount(items, activeId) + 1}
+                childCount={getChildCount(varaBlocksState, activeId) + 1}//{getChildCount(items, activeId) + 1}
                 value={activeId.toString()}
                 indentationWidth={indentationWidth}
               />
@@ -274,7 +266,8 @@ export function SortableTree({
     if (projected && over) {
       const {depth, parentId} = projected;
       const clonedItems: FlattenedItem[] = JSON.parse(
-        JSON.stringify(flattenTree(items))
+        // JSON.stringify(flattenTree(items))
+        JSON.stringify(flattenTree(varaBlocksState))
       );
       const overIndex = clonedItems.findIndex(({id}) => id === over.id);
       const activeIndex = clonedItems.findIndex(({id}) => id === active.id);
@@ -285,9 +278,10 @@ export function SortableTree({
       const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
       const newItems = buildTree(sortedItems);
 
-      setItems(newItems);
+      // setItems(newItems);
+      varaBlocksDispatch(setBlocks(newItems));
 
-      console.log(items);
+      console.log(varaBlocksState);
       
     }
   }
@@ -306,15 +300,25 @@ export function SortableTree({
   }
 
   function handleRemove(id: UniqueIdentifier) {
-    setItems((items) => removeItem(items, id));
+    // setItems((items: TreeItems) => removeItem(items, id));
+    
+    const changedBlocks = removeItem(varaBlocksState, id);
+
+    varaBlocksDispatch(setBlocks(changedBlocks));
   }
 
   function handleCollapse(id: UniqueIdentifier) {
-    setItems((items) =>
-      setProperty(items, id, 'collapsed', (value) => {
-        return !value;
-      })
-    );
+    // setItems((items: TreeItems) =>
+    //   setProperty(items, id, 'collapsed', (value) => {
+    //     return !value;
+    //   })
+    // );
+
+    const changedBlocks = setProperty(varaBlocksState, id, 'collapsed', (value) => {
+      return !value;
+    });
+
+    varaBlocksDispatch(setBlocks(changedBlocks));
   }
 
   function getMovementAnnouncement(
@@ -339,7 +343,8 @@ export function SortableTree({
       }
 
       const clonedItems: FlattenedItem[] = JSON.parse(
-        JSON.stringify(flattenTree(items))
+        // JSON.stringify(flattenTree(items))
+        JSON.stringify(flattenTree(varaBlocksState))
       );
       const overIndex = clonedItems.findIndex(({id}) => id === overId);
       const activeIndex = clonedItems.findIndex(({id}) => id === activeId);

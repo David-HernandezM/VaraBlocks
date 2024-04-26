@@ -9,6 +9,14 @@ export { XorNumSelection } from './xor-num-selection/XorNumSelection';
 export { ButtonPredict } from './ButtonPrediction/ButtonPrediction';
 export { Sketch } from './Sketch/Sketch';
 
+export { VirtualContractEnum } from './VirtualContractComponents';
+export { VirtualContractStruct } from './VirtualContractComponents';
+export { VirtualContractEnumsContainer } from './VirtualContractComponents';
+export { VirtualContractStructsContainer } from './VirtualContractComponents';
+
+export { ButtonAddComponent } from './ButtonAddComponent/ButtonAddComponent';
+export { DeleteButton } from './DeleteButton/DeleteButton';
+
 
 export type {SubscriptionCost} from './ButtonSubscribe/ButtonSubscribe';
 

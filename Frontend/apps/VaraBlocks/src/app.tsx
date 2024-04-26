@@ -9,7 +9,8 @@ import {
   Index,
   Account,
   XorDemoNN,
-  DoodleDemoNN
+  DoodleDemoNN,
+  VaraEditor
 } from './routes';
 
 
@@ -35,6 +36,10 @@ function Component() {
             {
               path: "account",
               element: <Account />,
+            },
+            {
+              path: "account/varaeditor",
+              element: <VaraEditor />,
             },
             {
               path: 'account/xor-demo-nn',

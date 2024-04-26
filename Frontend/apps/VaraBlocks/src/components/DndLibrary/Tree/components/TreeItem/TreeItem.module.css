@@ -1,6 +1,7 @@
 .Wrapper {
   list-style: none;
   box-sizing: border-box;
+  
   padding-left: var(--spacing);
   margin-bottom: -1px;
 
@@ -72,6 +73,10 @@
   position: relative;
   display: flex;
   align-items: center;
+  max-width: 400px;
+  min-width: 300px;
+
+  width: fit-content;
   gap: 10px;
   padding: var(--vertical-padding) 10px;
   background-color: #fff;
@@ -81,7 +86,7 @@
 }
 
 .Text {
-  flex-grow: 1;
+  /* flex-grow: 1; */
   padding-left: 0.5rem;
   white-space: nowrap;
   text-overflow: ellipsis;

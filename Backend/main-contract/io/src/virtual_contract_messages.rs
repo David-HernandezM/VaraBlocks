@@ -1,12 +1,16 @@
 use gstd::{prelude::*, ActorId};
 
-use super::contract_types::Types;
-use super::contract_enum::{
+use super::virtual_contract_types::VirtualContractTypes;
+use super::virtual_contract_enum::{
     EnumName,
     EnumVal
 };
+use super::virtual_contract_struct::{
+    StructName,
+    StructAttributeName
+};
 
-#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[derive(Encode, Decode, TypeInfo, Clone)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub enum MessageTypeToSend {
@@ -14,7 +18,7 @@ pub enum MessageTypeToSend {
     Send
 }
 
-#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[derive(Encode, Decode, TypeInfo, Clone)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub struct MessageToSend {
@@ -23,26 +27,28 @@ pub struct MessageToSend {
     pub message_type_to_send: MessageTypeToSend
 }
 
-#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[derive(Encode, Decode, TypeInfo, Clone)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub enum VirtualContractMessage {
     Error(VirtualContractErrors),
     MessageProcessed,
+    MessagesToSend(Vec<MessageToSend>),
     VirtualContractCreated,
     VirtualContractMetadataChecked
 }
 
-#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[derive(Encode, Decode, TypeInfo, Clone)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub enum VirtualContractErrors {
     ContractDontHaveEnum(String),
     ContractDontHaveStruct(String),
+    ContractDontHaveState,
     InitMetadataNotDefinedAndUsed,
     InitMetadataContainsInexistentEnum(String),
     HandleMetadataNotDefinedAndUsed,
-    MatchDoesNotHaveAllCases,
+    MatchDoesNotHaveAllCases(EnumName),
     VariableDoesNotHaveName,
     VariableDoesNotExixts {
         variable_name: String
@@ -54,18 +60,22 @@ pub enum VirtualContractErrors {
     },
     VariableIsNotAnEnumForMatch {
         variable_name: String,
-        variable_type: Types
+        variable_type: VirtualContractTypes
     },
     VariableHasWrongTypes {
         variable_name: String,
     },
-    VariantDontFitInMatch {
+    VariableDontFitInMatch {
         variable_name: String,
         expected_variable: String
     },
     VariantNotExistsInEnum {
         enum_name: String,
         variant: String
+    },
+    AttributeNotExistsInStruct {
+        struct_name: StructName,
+        attribute: StructAttributeName
     },
     ControlFlowDoesNotMatch {
         expected: String,
@@ -87,5 +97,6 @@ pub enum VirtualContractErrors {
     EnumNamenCantBeEmpty,
     EnumVariantNameCantBeEmpty,
     StructNameCantBeEmpty,
-    NameCantBeEmpty
+    NameCantBeEmpty,
+    ErrorGettingMessagesToSend
 }

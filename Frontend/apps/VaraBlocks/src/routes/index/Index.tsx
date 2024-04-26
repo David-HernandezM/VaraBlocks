@@ -9,72 +9,474 @@ import './Index.scss';
 import { useState, forwardRef, useEffect } from 'react';
 import { TreeItems } from '@/components/DndLibrary/Tree/types';
 import { generateRandomString } from '@/app/utils';
-import { VirtualContractType2 } from '@/app/types';
 
+import { useContractUtils } from '@/app/hooks';
+import { MAIN_CONTRACT } from '@/app/consts';
+import { useAccount } from '@gear-js/react-hooks';
+import { ProgramMetadata } from '@gear-js/api';
+
+import { CodeBlock, Variable, ControlFlow, VirtualContractTypes, Match, SendMessage, SendReply, VirtualContractData, EnumVal } from '@/app/app_types/types';
+
+import { useAppDispatch } from '@/app/hooks';
+// import { addBlock } from '@/app/SliceReducers/VaraBlocksTree/varaBlocksTreeSlice';
+
+
+
+// import { Virtual }
 
 
 export default function Index() {
-
+    const {
+      sendMessage
+    } = useContractUtils();
+    const account = useAccount();
     const [contractEnums, setContractEnums] = useState([]);
     const [contractStructs, setContractStructs] = useState([]);
-    const [codeBlockItems, setcodeBlockItems] = useState<TreeItems>(
-      [
-        {
-          id: 'Home',
-          children: [],
-        },
-        {
-            id: 'Nav',
-            children: [],
-        },
-        {
-          id: 'Collections',
-          children: [
-            {id: 'Spring', children: []},
-            {id: 'Summer', children: []},
-            {id: 'Fall', children: []},
-            {id: 'Winter', children: []},
-          ],
-        },
-        {
-          id: 'About Us',
-          children: [],
-        },
-        {
-          id: 'My Account',
-          children: [
-            {id: 'Addresses', children: []},
-            {id: 'Order History', children: []},
-          ],
-        },
-    ]
-    );
+    // const varaBlocks = useAppSelector((state) => state.varaBlocksTree.blocks);
+    const varaBlocksDispatch = useAppDispatch();
 
-    const x: VirtualContractType2 = { UNumVal: 4 };
-    
+    const [codeBlockItems, setcodeBlockItems] = useState<TreeItems>([]);
 
     return (
         <>
+         <button onClick={
+          async () => {
+            console.log("Sending message to contract");
+            if (!account.account) {
+              console.log("Account isnt initialized");
+              return;
+            }
+
+            let virtualContractTest: VirtualContractData = {
+              metadata: {
+                init: {
+                  NoValue: null
+                },
+                handle: {
+                  InOut: ['ContractActions', 'ContractEvent']
+                }
+              },
+              state: ['ContractState', null],
+              initCode: [
+                {
+                  Variable: {
+                    variableName: 'message',
+                    isMutable: false,
+                    varType: {
+                      Enum: null
+                    },
+                    varValue: {
+                      EnumVal: {
+                        enumFrom: 'ContractEvent',
+                        val: 'Ping'
+                      }
+                    },
+                    isParameter: false
+                  }
+                }
+              ],
+              handleCode: [
+                {
+                  LoadMessage: {
+                    variableName: 'message',
+                    isMutable: false,
+                    varType: {
+                      Enum: null,
+                    },
+                    varValue: {
+                      EnumVal: {
+                        enumFrom: '',
+                        val: ''
+                      }
+                    },
+                    isParameter: false
+                  }
+                },
+                {
+                  ControlFlow: {
+                    Match: {
+                      variableToMatch: 'message',
+                      enumToMatch: 'ContractActions',
+                      codeBlock: [
+                        [
+                          {
+                            SendReply: {
+                              message: {
+                                enumFrom: 'ContractEvent',
+                                val: 'Pong'
+                              }
+                            }
+                          }
+                        ],
+                        [
+                          {
+                            SendMessage: {
+                              to: account.account.decodedAddress,
+                              message: {
+                                enumFrom: 'ContractEvent',
+                                val: 'Ping'
+                              }
+                            }
+                          },
+                          {
+                            SendReply: {
+                              message: {
+                                enumFrom: 'ContractEvent',
+                                val: 'Ping'
+                              }
+                            }
+                          }
+                        ]
+                      ]
+                    }
+                  }
+                },
+                {
+                  SendMessage: {
+                    to: account.account.decodedAddress,
+                    message: {
+                      enumFrom: 'ContractEvent',
+                      val: 'Pong'
+                    }
+                  }
+                }
+              ],
+              enums: [
+                [
+                  'ContractActions', 
+                  {
+                    enumName: 'ContractActions',
+                    enumType: {
+                      ContractActions: null
+                    },
+                    variants: [
+                      'Ping',
+                      'Pong'
+                    ]
+                  }
+                ],
+                [
+                  'ContractEvent',
+                  {
+                    enumName: 'ContractEvent',
+                    enumType: {
+                      ContractEvents: null
+                    },
+                    variants: [
+                      'Ping',
+                      'Pong'
+                    ]
+                  }
+                ]
+              ],
+              structs: [
+                [
+                  'ContractState',
+                  {
+                    structName: 'ContractState',
+                    attributes: [
+                      {
+                        attributeName: 'last_calls',
+                        attributeType: {
+                          Vec: null
+                        },
+                        attributeVal: {
+                          VecVal: {
+                            VecString: []
+                          }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              ]
+            }
+
+
+// 3,064.2049
+// 3,064.1871  Almadenamiento de contrato
+
+// 3,064.1574
+// 3,064.1412  Mensaje Ping
+
+// 3,064.1412
+// 
+
+          
+            let x = await sendMessage(
+              account.account.decodedAddress,
+              account.account.meta.source,
+              MAIN_CONTRACT.programId,
+              ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+              {
+                Test1: virtualContractTest
+              },
+              0,
+              "Se proceso el mensaje!",
+              "No se proceso el mensaje",
+              "Checando si se procesa el mensaje",
+              "VaraBlocks action:"
+            );
+          }
+        }>
+          Test Virtual contract
+        </button>
+        <button onClick={async () => {
+          console.log("Sending message to contract");
+          if (!account.account) {
+            console.log("Account isnt initialized");
+            return;
+          }
+
+          await sendMessage(
+            account.account.decodedAddress,
+            account.account.meta.source,
+            MAIN_CONTRACT.programId,
+            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            // {
+            //   Test1: virtualContractTest
+            // },
+            {
+              SendMessageToVirtualContract: {
+                enumFrom: 'ContractActions',
+                val: 'Ping'
+              }
+            },
+            0,
+            "Se proceso el mensaje!",
+            "No se proceso el mensaje",
+            "Checando si se procesa el mensaje",
+            "VaraBlocks action:"
+          );
+        }}>
+          Send ping message
+        </button>
+        <button onClick={ async () => {
+          console.log("Sending message to contract");
+          if (!account.account) {
+            console.log("Account isnt initialized");
+            return;
+          }
+
+          await sendMessage(
+            account.account.decodedAddress,
+            account.account.meta.source,
+            MAIN_CONTRACT.programId,
+            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            // {
+            //   Test1: virtualContractTest
+            // },
+            {
+              SendMessageToVirtualContract: {
+                enumFrom: 'ContractActions',
+                val: 'Pong'
+              }
+            },
+            0,
+            "Se proceso el mensaje!",
+            "No se proceso el mensaje",
+            "Checando si se procesa el mensaje",
+            "VaraBlocks action:"
+          );
+        }}>
+          Send pong message
+        </button>
+        <button onClick={async () => {
+          console.log("Sending message to contract");
+          if (!account.account) {
+            console.log("Account isnt initialized");
+            return;
+          }
+
+          await sendMessage(
+            account.account.decodedAddress,
+            account.account.meta.source,
+            MAIN_CONTRACT.programId,
+            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            {
+              AddTestVirtualContract: null
+            },
+            0,
+            "Se proceso el mensaje!",
+            "No se proceso el mensaje",
+            "Checando si se procesa el mensaje",
+            "VaraBlocks action:"
+          );
+        }}>
+          Set default contract
+        </button>
+        <button onClick={async () => {
+          console.log("Sending message to contract");
+          if (!account.account) {
+            console.log("Account isnt initialized");
+            return;
+          }
+
+          await sendMessage(
+            account.account.decodedAddress,
+            account.account.meta.source,
+            MAIN_CONTRACT.programId,
+            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            {
+              AddTestVirtualContract: null
+            },
+            0,
+            "Se proceso el mensaje!",
+            "No se proceso el mensaje",
+            "Checando si se procesa el mensaje",
+            "VaraBlocks action:"
+          );
+        }}>
+          Send tests
+        </button>
+        {/* <button onClick={async () => {
+          console.log("Sending message to contract");
+          if (!account.account) {
+            console.log("Account isnt initialized");
+            return;
+          }
+
+          await sendMessage(
+            account.account.decodedAddress,
+            account.account.meta.source,
+            MAIN_CONTRACT.programId,
+            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            {
+              MakeReservation: null
+            },
+            0,
+            "Se proceso el mensaje!",
+            "No se proceso el mensaje",
+            "Checando si se procesa el mensaje",
+            "VaraBlocks action:"
+          );
+        }}>
+          Make Reservation
+        </button> */}
+
+        {/*
         <div className='index-container'>
             <SortableTree items={codeBlockItems} setItems={setcodeBlockItems} />
         </div>
         <button onClick={() => {
-          setcodeBlockItems([{ id: generateRandomString(15), children: []}, ...codeBlockItems]) 
+          varaBlocksDispatch(addBlock({ id: generateRandomString(15), blockType: 'variable', children: []}));
+          setcodeBlockItems([{ id: generateRandomString(15), blockType: 'variable', children: []}, ...codeBlockItems]) 
           console.log("ya se guardo segun!");
           console.log(codeBlockItems);
           
-          
         }}>
-          Add Item
+          Add Variable
         </button>
-        {/* <div className='index-container'>
-            <SortableTree />
-        </div> */}
+         */}
+        {/* <ul>
+          <li style={{background: 'red'}}>hola</li>
+        </ul> */}
+      
         </>
     );
+}
 
 
-    // const containers = ['A', 'B', 'C'];
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    // const [codeBlockItems, setcodeBlockItems] = useState<TreeItems>(
+    //   [
+    //     {
+    //       id: 'Home',
+    //       blockType: 'variable',
+    //       children: [],
+    //     },
+    //     {
+    //         id: 'Nav',
+    //         blockType: 'replymessage',
+    //         children: [],
+    //     },
+    //     {
+    //       id: 'Collections',
+    //       blockType: 'match',
+    //       children: [
+    //         {
+    //           id: 'Spring', 
+    //           blockType: 'sendmessage',
+    //           children: []
+    //         },
+    //         {
+    //           id: 'Summer', 
+    //           blockType: 'match',
+    //           children: [
+    //             {
+    //               id: 'Test1', 
+    //               blockType: 'match',
+    //               children: [
+    //               {
+    //                 id: 'last', 
+    //                 blockType: 'variable',
+    //                 children: []
+    //               }
+    //           ]}
+    //         ]},
+    //         {
+    //           id: 'Fall', 
+    //           blockType: 'loadmessage',
+    //           children: []
+    //         },
+    //         {
+    //           id: 'Winter', 
+    //           blockType: 'replymessage',
+    //           children: []
+    //         },
+    //       ],
+    //     },
+    //     {
+    //       id: 'About Us',
+    //       blockType: 'sendmessage',
+    //       children: [],
+    //     },
+    //     {
+    //       id: 'My Account',
+    //       blockType: 'match',
+    //       children: [
+    //         {
+    //           id: 'Addresses', 
+    //           blockType: 'replymessage',
+    //           children: []
+    //         },
+    //         {
+    //           id: 'Order History', 
+    //           blockType: 'sendmessage',
+    //           children: []
+    //         },
+    //       ],
+    //     },
+    // ]
+    // );
+
+
+
+
+
+
+
+ // const containers = ['A', 'B', 'C'];
     // const [parent, setParent] = useState(null);
     // const [avr, setAvr] = useState([]);
     // const [isDragging, setIsDragging] = useState(false);
@@ -156,7 +558,7 @@ export default function Index() {
     //     setParent(over ? over.id : null);
     //     setIsDragging(false);
     // }
-}
+
 
 // interface ItemProps {
 //     ref: any,

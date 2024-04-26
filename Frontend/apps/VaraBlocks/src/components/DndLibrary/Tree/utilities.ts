@@ -82,6 +82,13 @@ function flatten(
   depth = 0
 ): FlattenedItem[] {
   return items.reduce<FlattenedItem[]>((acc, item, index) => {
+    console.log('ACC');
+    console.log(acc);
+    console.log('ITEM');
+    console.log(item);
+    console.log('INDEX: ', index);
+    console.log('\n');
+    
     return [
       ...acc,
       {...item, parentId, depth, index},
@@ -95,16 +102,16 @@ export function flattenTree(items: TreeItems): FlattenedItem[] {
 }
 
 export function buildTree(flattenedItems: FlattenedItem[]): TreeItems {
-  const root: TreeItem = {id: 'root', children: []};
+  const root: TreeItem = {id: 'root', blockType: 'variable', children: []};
   const nodes: Record<string, TreeItem> = {[root.id]: root};
   const items = flattenedItems.map((item) => ({...item, children: []}));
 
   for (const item of items) {
-    const {id, children} = item;
+    const {id, blockType, children} = item;
     const parentId = item.parentId ?? root.id;
     const parent = nodes[parentId] ?? findItem(items, parentId);
 
-    nodes[id] = {id, children};
+    nodes[id] = {id, blockType, children};
     parent.children.push(item);
   }
 
@@ -142,15 +149,16 @@ export function removeItem(items: TreeItems, id: UniqueIdentifier) {
   const newItems = [];
 
   for (const item of items) {
-    if (item.id === id) {
+    const newItem = {...item};
+    if (newItem.id === id) {
       continue;
     }
 
-    if (item.children.length) {
-      item.children = removeItem(item.children, id);
+    if (newItem.children.length) {
+      newItem.children = removeItem(newItem.children, id);
     }
 
-    newItems.push(item);
+    newItems.push(newItem);
   }
 
   return newItems;
@@ -197,6 +205,9 @@ export function removeChildrenOf(
   ids: UniqueIdentifier[]
 ) {
   const excludeParentIds = [...ids];
+
+  console.log('IDS A EXCLUIR');
+  console.log(excludeParentIds);
 
   return items.filter((item) => {
     if (item.parentId && excludeParentIds.includes(item.parentId)) {

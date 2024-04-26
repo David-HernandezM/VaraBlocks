@@ -1,18 +1,22 @@
 #![no_std]
-use gstd::{prelude::*, Vec, collections::BTreeMap, ActorId, msg};
+use gstd::{prelude::*, Vec, collections::BTreeMap, ActorId, msg, ReservationId};
 use gmeta::{Metadata, In, Out, InOut};
 
 pub mod varablocks_types;
-pub mod contract_utils;
-pub mod contract_types;
-pub mod contract_struct;
-pub mod contract_enum;
-pub mod contract_messages;
+pub mod virtual_contract_utils;
+pub mod virtual_contract_types;
+pub mod virtual_contract_struct;
+pub mod virtual_contract_enum;
+pub mod virtual_contract_messages;
+pub mod virtual_contract_format;
+pub mod virtual_contract_state_handlers;
 
-use contract_enum::EnumVal;
-use contract_utils::VirtualContract;
-use contract_messages::VirtualContractMessage;
-use contract_types::Types as VirtualContractTypes;
+use virtual_contract_enum::*;
+use virtual_contract_utils::VirtualContract;
+use virtual_contract_messages::VirtualContractMessage;
+use virtual_contract_types::VirtualContractVecTypes;
+use virtual_contract_format::VirtualContractData;
+use virtual_contract_struct::*;
 
 use varablocks_types::*;
 
@@ -21,7 +25,7 @@ pub struct ProgramMetadata;
 impl Metadata for ProgramMetadata {
     type Init = (); // In<InitMainContract>;
     type Handle = InOut<ContractAction, ContractEvent>;
-    type Others = (); // InOut<String, String>;
+    type Others = (); 
     type Reply = ();
     type Signal = ();
     type State = ();// Out<String>; // InOut<ContractStateQuery, ContractStateReply>;
@@ -33,23 +37,58 @@ impl Metadata for ProgramMetadata {
 #[scale_info(crate = gstd::scale_info)]
 pub enum ContractAction {
     SendMessageToVirtualContract(EnumVal),
-    Test(VirtualContractTypes),
+    Test(CodeBlock),
+    Test1(VirtualContractData),
+    Test2(ContractEnum),
+    Test3(ContractStruct),
     AddTestVirtualContract,
+    MakeReservation
 }
 
 #[derive(Encode, Decode, TypeInfo)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub enum ContractEvent {
-    MeesageOfVirtualContract(EnumVal),
+    // MeesageOfVirtualContract(EnumVal),
+    MesageOfVirtualContractTest {
+        enum_from: String,
+        value: String
+    },
     MessageOfInterpreter(VirtualContractMessage),
     VirtualContractSet,
-    NoVirtualContractStored
+    NoVirtualContractStored,
+    ReservationMade,
+    NoReservationIdInContract
 }
 
 pub struct Contract {
     pub owner: ActorId,
-    pub virtual_contracts: VirtualContract
+    pub virtual_contracts: VirtualContract,
+    pub reservations: Vec<ReservationId>
+}
+
+#[derive(Encode, Decode, TypeInfo)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub enum Test3 {
+    Option1(Test1),
+    Option2(Test2)
+}
+
+#[derive(Encode, Decode, TypeInfo)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub enum Test1 {
+    Variant1,
+    Variant2(Box<Test2>)
+}
+
+#[derive(Encode, Decode, TypeInfo)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub enum Test2 {
+    Variant1,
+    Variant2(Box<Test1>)
 }
 
 /*
