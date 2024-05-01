@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { ButtonAddComponent } from "@/components/ButtonAddComponent/ButtonAddComponent";
-import { ContractEnum } from "@/app/app_types/types";
 import { generatePassword } from "@/app/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { 
@@ -19,7 +17,6 @@ interface VirtualContractEnumProps {
 }
 
 export function VirtualContractEnum({ enumId }: VirtualContractEnumProps) {
-    const [enumVariants, setEnumVariants] = useState<[string, string][]>([]);
     const enumsData = useAppSelector((state) => state.VaraBlocksData.enums);
     const dispatch = useAppDispatch();
 
@@ -27,34 +24,34 @@ export function VirtualContractEnum({ enumId }: VirtualContractEnumProps) {
         <div className="virtualcontractenum">
             <div className="virtualcontractenum__title-container">
                 <label 
-                    htmlFor="enumvariant"
+                    htmlFor={enumId}
                     className="virtualcontractenum__label-title"
                 >
                     Enum: 
                 </label>
                 <input 
                     type="text" 
-                    name="enumvariant" 
-                    id="enumvariant" 
+                    name={enumId} 
+                    id={enumId} 
                     className="virtualcontractenum__input-enum-name"
                     onChange={(e) => {
                         dispatch(editEnumTitle({
                             enumId: enumId,
                             newTitle: e.target.value
                         }));
-                        console.log("enum title changed!");
                     }}
                     value={enumsData[enumId].enumName}
                     placeholder="EnumName"
                     autoComplete="off"
+                    required
                 />
             </div>
-            <div className="virtualcontractenum__variants-contract">
+            <div className="virtualcontractenum__variants-enum">
                 {
                     Object.keys(enumsData[enumId].variants).map((variantKey) => {
                         return (
-                            <div className="virtualcontractenum__variant" key={variantKey}>
-                                <label htmlFor="">Variant: </label>
+                            <div className="virtualcontractenum__enum-variant" key={variantKey}>
+                                <label htmlFor={variantKey}>Variant: </label>
                                 <input 
                                     type="text" 
                                     name={variantKey} 
@@ -66,10 +63,10 @@ export function VirtualContractEnum({ enumId }: VirtualContractEnumProps) {
                                             variantId: variantKey,
                                             variantVal: e.target.value
                                         }));
-                                        console.log("enum variant changed!");
                                     }}
                                     placeholder="VariantName"
                                     value={enumsData[enumId].variants[variantKey]}
+                                    required
                                 />
                                 <DeleteButton 
                                     onClickHandler={

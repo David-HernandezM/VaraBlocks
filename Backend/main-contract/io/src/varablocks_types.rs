@@ -7,7 +7,10 @@ use super::virtual_contract_enum::{
     EnumVal
 };
 use super::virtual_contract_state_handlers::StateAttributeToModify;
-use super::virtual_contract_types::VirtualContractTypes;
+use super::virtual_contract_types::{
+    VirtualContractTypesVal,
+    VirtualContractTypes
+};
 
 #[derive(Encode, Decode, TypeInfo, Clone, Debug)]
 #[codec(crate = gstd::codec)]
@@ -28,10 +31,7 @@ pub enum CodeBlock {
     SendReply {
         message: EnumVal,
     },
-    Return(VirtualContractTypes),
-    Test(String),
-    Test2(Variable),
-    test3(ControlFlow),
+    Return(VirtualContractTypesVal)
 }
 
 
@@ -52,17 +52,17 @@ pub enum BooleanExpressionTypes {
 #[scale_info(crate = gstd::scale_info)]
 pub enum BooleanExpression {
     Simple {
-        first: VirtualContractTypes,
-        second: VirtualContractTypes,
+        first: VirtualContractTypesVal,
+        second: VirtualContractTypesVal,
         expression_type: BooleanExpressionTypes
     },
     FirstComplex {
         first: Variable,
-        second: VirtualContractTypes,
+        second: VirtualContractTypesVal,
         expression_type: BooleanExpressionTypes
     },
     SecondComplex {
-        first: VirtualContractTypes,
+        first: VirtualContractTypesVal,
         second: Variable,
         expression_type: BooleanExpressionTypes
     },
@@ -107,12 +107,12 @@ pub enum ControlFlow {
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub enum AssignmentType {
-    Add(VirtualContractTypes),
-    Subtract(VirtualContractTypes),
-    Multiply(VirtualContractTypes),
-    Divide(VirtualContractTypes),
-    Module(VirtualContractTypes),
-    NewValue(VirtualContractTypes)
+    Add(VirtualContractTypesVal),
+    Subtract(VirtualContractTypesVal),
+    Multiply(VirtualContractTypesVal),
+    Divide(VirtualContractTypesVal),
+    Module(VirtualContractTypesVal),
+    NewValue(VirtualContractTypesVal)
 }
 
 #[derive(Encode, Decode, TypeInfo, Clone, Debug)]
@@ -130,8 +130,8 @@ pub struct Assignment {
 pub struct Variable {
     pub variable_name: String,
     pub is_mutable: bool,
-    pub var_value: VirtualContractTypes,
     pub var_type: VirtualContractTypes,
+    pub var_value: VirtualContractTypesVal,
     pub is_parameter: bool
 }
 
@@ -140,27 +140,27 @@ impl Variable {
         let var_value = &self.var_value;
         match self.var_type {
             VirtualContractTypes::Enum => {
-                if let VirtualContractTypes::EnumVal(_) = var_value {
+                if let VirtualContractTypesVal::EnumVal(_) = var_value {
                     return true;
                 }
             },
             VirtualContractTypes::INum => {
-                if let VirtualContractTypes::INumVal(_) = var_value {
+                if let VirtualContractTypesVal::INumVal(_) = var_value {
                     return true;
                 }
             },
             VirtualContractTypes::UNum => {
-                if let VirtualContractTypes::INumVal(_) = var_value {
+                if let VirtualContractTypesVal::INumVal(_) = var_value {
                     return true;
                 }
             },
             VirtualContractTypes::String => {
-                if let VirtualContractTypes::StringVal(_) = var_value {
+                if let VirtualContractTypesVal::StringVal(_) = var_value {
                     return true;
                 }
             },
             VirtualContractTypes::Boolean => {
-                if let VirtualContractTypes::BooleanVal(_) = var_value {
+                if let VirtualContractTypesVal::BooleanVal(_) = var_value {
                     return true;
                 }
             },

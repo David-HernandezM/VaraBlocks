@@ -42,7 +42,14 @@ export interface UsersMessages {
 
 
 
+interface StructAttributeI {
+    [key: string]: StructAttribute
+}
 
+export interface ContractStructInterface {
+    structName: StructName,
+    attributes: StructAttributeI
+}
 
 export interface ContractStruct {
     structName: StructName,
@@ -60,7 +67,15 @@ export interface StructAttribute {
 
 
 
+interface EnumVariantI {
+    [key: string]: string
+}
 
+export interface ContractEnumInterface {
+    enumName: EnumName,
+    enumType: ContractEnumType,
+    variants: EnumVariantI
+}
 
 
 export interface EnumVal {
@@ -68,14 +83,10 @@ export interface EnumVal {
     val: string
 }
 
-interface EnumVariant {
-    [key: string]: string
-}
-
 export interface ContractEnum {
     enumName: EnumName,
     enumType: ContractEnumType,
-    variants: EnumVariant
+    variants: string[]
 }
 
 export type ContractEnumType =

@@ -7,6 +7,10 @@ use main_contract_io::virtual_contract_struct::*;
 use main_contract_io::virtual_contract_enum::*;
 use main_contract_io::virtual_contract_messages::*;
 use main_contract_io::{ContractAction, ContractEvent};
+use main_contract_io::virtual_contract_state_handlers::{
+    StateAttributeToModify,
+    StringActionsToModify
+};
 use main_contract_io::*;
 
 static mut CONTRACT: Option<Contract> = None;
@@ -17,7 +21,8 @@ extern "C" fn intit() {
         CONTRACT = Some(
             Contract {
                 owner: msg::source(),
-                virtual_contracts: basic_contract_test_correct(),
+                virtual_contracts: BTreeMap::new(),
+                messages_of_virtual_contracts: BTreeMap::new(),
                 reservations: Vec::new()
             }
         );
@@ -28,105 +33,70 @@ extern "C" fn intit() {
 extern "C" fn handle() {
     let message = msg::load()
         .expect("Error loading message");
-
+    let caller = msg::source();
     let state = state_mut();
+    
 
     match message {
-        ContractAction::SendMessageToVirtualContract(message_to_virtual_contract) => {
-            // if state.virtual_contracts.len() == 0 {
-            //     msg::reply(ContractEvent::NoVirtualContractStored, 0)
-            //         .expect("Error sending reply");
-            // }
+        ContractAction::SetVirtualContract(virtual_contract) => {
+            if state.virtual_contracts.contains_key(&caller) {
+                state.virtual_contracts
+                    .entry(caller)
+                    .and_modify(|actual_virtual_contract| *actual_virtual_contract = virtual_contract.into());
+            } else {
+                state.virtual_contracts
+                    .insert(caller, virtual_contract.into());
+            }
 
-            let response_of_virtual_contract = state
-                .virtual_contracts
+            msg::reply(ContractEvent::VirtualContractSet, 0)
+                .expect("Error sending reply");
+        },
+        ContractAction::SetDefaultVirtualContract => {
+            if state.virtual_contracts.contains_key(&caller) {
+                state.virtual_contracts
+                    .entry(caller)
+                    .and_modify(|actual_virtual_contract| *actual_virtual_contract = basic_contract_test_correct());
+            } else {
+                state.virtual_contracts
+                    .insert(caller, basic_contract_test_correct());
+            }
+
+            msg::reply(ContractEvent::VirtualContractSet, 0)
+                .expect("Error sending reply");
+        },
+        ContractAction::SendMessageToVirtualContract(message_to_virtual_contract) => {
+            if !state.virtual_contracts.contains_key(&caller) {
+                msg::reply(ContractEvent::NoVirtualContractStored, 0)
+                    .expect("Error sending reply");
+                return;
+            }
+
+            let contract_process_result = state.virtual_contracts
+                .get_mut(&caller)
+                .unwrap()
                 .handle_message(message_to_virtual_contract);
                 
             
-            let message_to_send = match response_of_virtual_contract {
+            let message_to_send = match contract_process_result {
                 Ok(message_of_vb) => {
-                    let VirtualContractMessage::MessagesToSend(messages_to_send) = message_of_vb else {
-                        msg::reply(VirtualContractMessage::Error(VirtualContractErrors::ErrorGettingMessagesToSend), 0)
-                            .expect("Error sending message");
-                        return;
-                    };
-        
-                    for message in messages_to_send.into_iter() {
-                        // if state.reservations.is_empty() {
-                        //     msg::reply(ContractEvent::NoReservationIdInContract, 0)
-                        //         .expect("error sending reply");
-                        //     return;
-                        // } 
+                    let (message_of_contract, sent_messages) = message_of_vb;
 
-                        // let reservation_id = state.reservations.pop().expect("Reservations id vec is empty");
+                    sent_messages
+                        .into_iter()
+                        .for_each(|message| {
+                            state.messages_of_virtual_contracts
+                                .entry(message.to)
+                                .and_modify(|messages| messages.push(message.message.clone()))
+                                .or_insert(vec![message.message]);
+                        });
 
-                        if let MessageTypeToSend::Reply = message.message_type_to_send {
-                            // msg::send_delayed_from_reservation::<ContractEvent>(
-                            //     reservation_id,
-                            //     msg::source(),
-                            //     ContractEvent::MeesageOfVirtualContract(message.message),
-                            //     0,
-                            //     2
-                            // ).expect("Unable to send delayed message");
-
-                            msg::send(msg::source(), ContractEvent::MesageOfVirtualContractTest {
-                                enum_from: message.message.enum_from,
-                                value: message.message.val
-                                
-                            }, 0)
-                                .expect("Error sending message of virtual contract");
-
-                            // VirtualContract::send_message_reply(message.message);
-                        } else {
-                            // msg::send_delayed_from_reservation::<ContractEvent>(
-                            //     reservation_id,
-                            //     message.to,
-                            //     ContractEvent::MeesageOfVirtualContract(message.message),
-                            //     0,
-                            //     2
-                            // ).expect("Unable to send delayed message");
-
-                            msg::send(message.to,ContractEvent::MesageOfVirtualContractTest {
-                                enum_from: message.message.enum_from,
-                                value: message.message.val
-                            }, 0)
-                                .expect("Error sending message of virtual contract");
-
-                            // VirtualContract::send_message_to(message.to, message.message);
-                        }
-                    }
-
-                    VirtualContractMessage::MessageProcessed
+                    message_of_contract
                 },
                 Err(message_error) => message_error
             };
 
             msg::reply(ContractEvent::MessageOfInterpreter(message_to_send), 0)
                 .expect("Error sending reply");
-        },
-        ContractAction::AddTestVirtualContract => {
-            state.virtual_contracts = basic_contract_test_correct();
-
-            msg::reply(ContractEvent::VirtualContractSet, 0)
-            .expect("Error sending reply");
-        },
-        ContractAction::Test(type_test) => {
-            msg::reply(ContractEvent::VirtualContractSet, 0)
-            .expect("Error sending reply");
-        },
-        ContractAction::Test1(virtual_contract) => {
-            state.virtual_contracts = virtual_contract.into();
-
-            msg::reply(ContractEvent::VirtualContractSet, 0)
-            .expect("Error sending reply");
-        },
-        ContractAction::Test2(type_test) => {
-            msg::reply(ContractEvent::VirtualContractSet, 0)
-            .expect("Error sending reply");
-        },
-        ContractAction::Test3(type_test) => {
-            msg::reply(ContractEvent::VirtualContractSet, 0)
-            .expect("Error sending reply");
         },
         ContractAction::MakeReservation => {
             let reservation_id = ReservationId::reserve(
@@ -141,11 +111,83 @@ extern "C" fn handle() {
     }
 }
 
-// #[no_mangle]
-// extern "C" fn state() {
-//     msg::reply(state_mut())
-//         .expect("Error sending reply");
-// }
+#[no_mangle]
+extern "C" fn state() {
+    let message = msg::load()
+        .expect("Error loading message state");
+    let state = state_ref();
+
+    match message {
+        ContractStateQuery::VirtualContract(user_id) => {
+            if !state.virtual_contracts.contains_key(&user_id) {
+                msg::reply(ContractStateReply::AddresDoesNotHaveVirtualContract(user_id), 0)
+                    .expect("Error sending reply state");
+                return;
+            }
+
+            let virtual_contract = state.virtual_contracts
+                .get(&user_id)
+                .unwrap();
+
+            msg::reply(ContractStateReply::VirtualContract(virtual_contract.into()), 0)
+                .expect("Error sending reply state");
+        },
+        ContractStateQuery::VirtualContractMetadata(user_id) => {
+            if !state.virtual_contracts.contains_key(&user_id) {
+                msg::reply(ContractStateReply::AddresDoesNotHaveVirtualContract(user_id), 0)
+                    .expect("Error sending reply state");
+                return;
+            }
+
+            let virtual_contract = state.virtual_contracts
+                .get(&user_id)
+                .unwrap();
+
+            msg::reply(ContractStateReply::VirtualContractMetadata(virtual_contract.metadata.clone()), 0)
+                .expect("Error sending reply state");
+        },
+        ContractStateQuery::VirtualContractState(user_id) => {
+            if !state.virtual_contracts.contains_key(&user_id) {
+                msg::reply(ContractStateReply::AddresDoesNotHaveVirtualContract(user_id), 0)
+                    .expect("Error sending reply state");
+                return;
+            }
+
+            let virtual_contract = state.virtual_contracts
+                .get(&user_id)
+                .unwrap();
+
+            let contract_state: Option<ContractStructFormat> = match &virtual_contract.state {
+                Some(state_data) => {
+                    let (_, state) = state_data;
+                    if let Some(contract_struct) = state {
+                        Some(contract_struct.into())
+                    } else {
+                        None
+                    }
+                },
+                None => None
+            };
+
+            msg::reply(ContractStateReply::VirtualContractState(contract_state), 0)
+                .expect("Error sending reply state");
+        },
+        ContractStateQuery::MessagesFromVirtualContract(user_id) => {
+            let messages = state.messages_of_virtual_contracts
+                .get(&user_id);
+
+            let to_send = match messages {
+                Some(messages) => {
+                    messages.clone()
+                },
+                _ => vec![]
+            };
+
+            msg::reply(ContractStateReply::MessagesFromVirtualContract(to_send), 0)
+                .expect("error sending reply state");
+        }
+    }
+}
 
 fn state_mut() -> &'static mut Contract {
     let state = unsafe { CONTRACT.as_mut() };
@@ -153,8 +195,19 @@ fn state_mut() -> &'static mut Contract {
     unsafe { state.unwrap_unchecked() }
 }
 
+fn state_ref() -> &'static Contract {
+    let state = unsafe { CONTRACT.as_ref() };
+    debug_assert!(state.is_some(), "State isn't initialized");
+    unsafe { state.unwrap_unchecked() }
+}
+
 fn basic_contract_test_correct() -> VirtualContract {
+   
+   
+   
+   
     VirtualContract {
+        // Controlar este aspecto y no tenga enum de inicio en el init
         initialized: false,
         metadata: VirtualContractMetadata {
             init: MetadataTypes::NoValue,
@@ -169,7 +222,7 @@ fn basic_contract_test_correct() -> VirtualContract {
                     variable_name: "message".to_string(),
                     is_mutable: false,
                     var_type: VirtualContractTypes::Enum,
-                    var_value: VirtualContractTypes::EnumVal(
+                    var_value: VirtualContractTypesVal::EnumVal(
                         EnumVal {
                             enum_from: "ContractEvent".to_string(),
                             val: "Ping".to_string()
@@ -185,7 +238,7 @@ fn basic_contract_test_correct() -> VirtualContract {
                     variable_name: "message".to_string(),
                     is_mutable: false,
                     var_type: VirtualContractTypes::Enum,
-                    var_value: VirtualContractTypes::EnumVal(
+                    var_value: VirtualContractTypesVal::EnumVal(
                         EnumVal {
                             enum_from: "".to_string(),
                             val: "".to_string()
@@ -205,7 +258,15 @@ fn basic_contract_test_correct() -> VirtualContract {
                                     enum_from: "ContractEvent".to_string(),
                                     val: "Pong".to_string()
                                 } 
-                            }  
+                            },
+                            CodeBlock::ModifyState(
+                                StateAttributeToModify::String { 
+                                    attribute_name: "name".to_string(), 
+                                    action: StringActionsToModify::ChangeTo(
+                                        String::from("test")
+                                    )
+                                }
+                            )
                         ],
                         vec![
                             CodeBlock::SendMessage { 
@@ -221,6 +282,22 @@ fn basic_contract_test_correct() -> VirtualContract {
                                     val: "Ping".to_string()
                                 } 
                             },
+                            CodeBlock::ModifyState(
+                                StateAttributeToModify::String { 
+                                    attribute_name: "name".to_string(), 
+                                    action: StringActionsToModify::ConcatString(
+                                        " prueba".to_string()
+                                    )
+                                }
+                            )
+                        ],
+                        vec![
+                            CodeBlock::ModifyState(
+                                StateAttributeToModify::String { 
+                                    attribute_name: "name".to_string(), 
+                                    action: StringActionsToModify::ClearString
+                                }
+                            )
                         ]
                     ]
                 }
@@ -238,7 +315,7 @@ fn basic_contract_test_correct() -> VirtualContract {
             (String::from("ContractActions"), ContractEnum {
                 enum_name: "ContractActions".to_string(),
                 enum_type: ContractEnumType::ContractActions,
-                variants: vec!["Ping".to_string(), "Pong".to_string()]
+                variants: vec!["Ping".to_string(), "Pong".to_string(), "Pang".to_string()]
             }),
             (String::from("ContractEvent"), ContractEnum {
                 enum_name: "ContractEvent".to_string(),
@@ -255,17 +332,33 @@ fn basic_contract_test_correct() -> VirtualContract {
         structs: HashMap::from([
             (String::from("ContractState"), ContractStruct {
                 struct_name: "ContractState".to_string(),
-                attributes: vec![
-                    StructAttribute {
-                        attribute_name: "last_calls".to_string(),
-                        attribute_type: VirtualContractTypes::Vec,
-                        attribute_val: VirtualContractTypes::VecVal(
-                            VirtualContractVecTypes::VecString(vec![])
-                        )
-                    }
-                ]
-            })
+                attributes: HashMap::from([
+                    (
+                        String::from("last_calls"), 
+                        StructAttribute {
+                            attribute_name: "last_calls".to_string(),
+                            attribute_type: VirtualContractTypes::Vec,
+                            attribute_val: VirtualContractTypesVal::VecVal(
+                                VirtualContractVecTypes::VecString(vec![])
+                            )
+                        }
+                    ),
+                    (
+                        String::from("name"),
+                        StructAttribute {
+                            attribute_name: "name".to_string(),
+                            attribute_type: VirtualContractTypes::String,
+                            attribute_val: VirtualContractTypesVal::StringVal(String::new())
+                        }
+                    )
+                ])
+            }),
         ]),
         menssages_send: HashMap::new()
     }
 }
+
+
+
+
+

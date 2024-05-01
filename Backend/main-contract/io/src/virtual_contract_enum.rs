@@ -3,7 +3,7 @@ use gstd::prelude::*;
 pub type EnumName = String;
 pub type EnumNameVariant = String;
 
-#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[derive(Encode, Decode, TypeInfo, Clone, Debug, Eq, PartialEq)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub struct EnumVal {

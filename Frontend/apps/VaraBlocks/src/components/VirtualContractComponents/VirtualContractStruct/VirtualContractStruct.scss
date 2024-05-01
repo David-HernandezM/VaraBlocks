@@ -1,0 +1,67 @@
+.virtualcontractstruct {
+    min-width: 40px;
+    min-height: 40px;
+    width: fit-content;
+    height: fit-content;
+    color: white;
+    border: solid 1px white;
+    border-radius: 6px;
+    padding-bottom: 20px;
+}
+
+.virtualcontractstruct__title-container {
+    display: flex;
+    justify-content: center;
+    padding: 20px 30px 10px 30px;
+}
+
+.virtualcontractstruct__label-title {
+    margin-right: 10px;
+    font-weight: bold;
+    font-size: large;
+}
+
+.virtualcontractstruct__input-struct-name {
+    border-radius: 10px;
+    padding-left: 6px;
+    text-align: center;
+    font-size: medium;
+    font-weight: 700;
+    height: 25px;
+    width: 10rem;
+
+    &.virtualcontractstruct__input-struct-name--short {
+        width: 8.5rem;
+    }
+}
+
+.virtualcontractstruct__struct-attribute {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 15px;
+    gap: 10px;
+    padding: 0 10px;
+
+    // & > p {
+    //     display: flex;
+    //     justify-content: center;
+    //     align-content: center;
+    // }
+}
+
+.virtualcontractstruct__struct-attribute-type {
+    font-size: 15px;
+    font-weight: 600;
+    border-radius: 5px;
+    text-align: center;
+
+    & > * {
+        font-weight: 600;
+    }
+}
+
+.virtualcontractstruct__congif-buttons {
+    display: flex;
+    justify-content:space-evenly;
+}

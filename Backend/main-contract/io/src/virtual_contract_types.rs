@@ -9,10 +9,10 @@ use super::virtual_contract_enum::EnumVal;
 // TIPOS DISTINTOS PARA CADA COSA!!!
 
 
-#[derive(Debug)]
-pub enum VecActionsToModify {
-    Add(VirtualContractTypes)
-}
+// #[derive(Debug)]
+// pub enum VecActionsToModify {
+//     Add(VirtualContractTypes)
+// }
 
 
 #[derive(Encode, Decode, TypeInfo, Clone, Debug)]
@@ -28,19 +28,10 @@ pub enum VirtualContractVecTypes {
     VecTupleStringString(Vec<(String, String)>),
 }
 
-#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[derive(Encode, Decode, TypeInfo, Clone, Debug, Eq, PartialEq)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub enum VirtualContractTypes {
-    // HashMapVal(HashMapTypes),
-    VecVal(VirtualContractVecTypes),
-    ActorIdVal(ActorId),
-    INumVal(i64),
-    UNumVal(u64),
-    StringVal(String),
-    BooleanVal(bool),
-    EnumVal(EnumVal),
-    VariableVal(String),
     // HashMap,
     Vec,
     ActorId,
@@ -53,6 +44,21 @@ pub enum VirtualContractTypes {
     String,
     Boolean,
     UnitValue
+}
+
+#[derive(Encode, Decode, TypeInfo, Clone, Debug)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub enum VirtualContractTypesVal {
+    // HashMapVal(HashMapTypes),
+    VecVal(VirtualContractVecTypes),
+    ActorIdVal(ActorId),
+    INumVal(i64),
+    UNumVal(u64),
+    StringVal(String),
+    BooleanVal(bool),
+    EnumVal(EnumVal),
+    VariableVal(String),
 }
 
 #[derive(Encode, Decode, TypeInfo, Clone, Debug)]
@@ -71,22 +77,8 @@ pub enum TypesVal {
 }
 
 impl VirtualContractTypes {
-    pub fn is_val(&self) -> bool {
-        match self {
-            // VirtualContractTypes::HashMap  => false,
-            VirtualContractTypes::Vec => false,
-            VirtualContractTypes::ActorId => false,
-            VirtualContractTypes::Variable => false,
-            VirtualContractTypes::NoValue => false,
-            VirtualContractTypes::ReceivedMessage => false,
-            VirtualContractTypes::Enum => false,
-            VirtualContractTypes::INum => false,
-            VirtualContractTypes::UNum => false,
-            VirtualContractTypes::String => false,
-            VirtualContractTypes::Boolean => false,
-            VirtualContractTypes::UnitValue => false,
-            _ => true
-        }
+    pub fn has_type(&self, type_data: &VirtualContractTypes) -> bool {
+        self == type_data
     }
 }
 

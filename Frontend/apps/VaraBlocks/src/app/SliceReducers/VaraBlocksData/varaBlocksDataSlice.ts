@@ -1,30 +1,184 @@
 import { TreeItems, TreeItem } from "@/components/DndLibrary/Tree/types";
 import { createSlice } from "@reduxjs/toolkit";
-import { ContractEnum, ContractStruct } from "@/app/app_types/types";
+import { 
+    ContractEnumInterface, 
+    ContractStructInterface, 
+    StructAttributeI,
+    VirtualContractTypes
+} from "@/app/app_types/types";
+import { generatePassword } from "@/app/utils";
 
-interface VaraBlocksEnums {
-    [key: string]: ContractEnum
+
+// [TODO]: Add extra verification for repited titiles, etc.
+// [TODO]: Check default value for ActorId, to put on value.
+
+interface VaraBlockEnum {
+    [key: string]: ContractEnumInterface
+}
+
+interface VaraBlockStruct {
+    [key: string]: ContractStructInterface
 }
 
 interface VaraBlocksData {
-    structs: ContractStruct[];
-    enums: VaraBlocksEnums,
+    structs: VaraBlockStruct
+    enums: VaraBlockEnum,
     initBlocks: TreeItems;
     handleBlocks: TreeItems;
 }
 
 const initialState: VaraBlocksData = {
-    structs: [],
+    structs: {},
     enums: {},
-    initBlocks: [],
-    handleBlocks: []
+    initBlocks: [
+        {
+          id: 'Home',
+          blockType: 'variable',
+          children: [],
+        },
+        {
+            id: 'Nav',
+            blockType: 'replymessage',
+            children: [],
+        },
+        {
+          id: 'Collections',
+          blockType: 'match',
+          children: [
+            {
+              id: 'Spring', 
+              blockType: 'sendmessage',
+              children: []
+            },
+            {
+              id: 'Summer', 
+              blockType: 'match',
+              children: [
+                {
+                  id: 'Test1', 
+                  blockType: 'match',
+                  children: [
+                  {
+                    id: 'last', 
+                    blockType: 'variable',
+                    children: []
+                  }
+              ]}
+            ]},
+            {
+              id: 'Fall', 
+              blockType: 'loadmessage',
+              children: []
+            },
+            {
+              id: 'Winter', 
+              blockType: 'replymessage',
+              children: []
+            },
+          ],
+        },
+        {
+          id: 'About Us',
+          blockType: 'sendmessage',
+          children: [],
+        },
+        {
+          id: 'My Account',
+          blockType: 'match',
+          children: [
+            {
+              id: 'Addresses', 
+              blockType: 'replymessage',
+              children: []
+            },
+            {
+              id: 'Order History', 
+              blockType: 'sendmessage',
+              children: []
+            },
+          ],
+        },
+    ],
+    handleBlocks: [
+        {
+          id: 'Home',
+          blockType: 'variable',
+          children: [],
+        },
+        {
+            id: 'Nav',
+            blockType: 'replymessage',
+            children: [],
+        },
+        {
+          id: 'Collections',
+          blockType: 'match',
+          children: [
+            {
+              id: 'Spring', 
+              blockType: 'sendmessage',
+              children: []
+            },
+            {
+              id: 'Summer', 
+              blockType: 'match',
+              children: [
+                {
+                  id: 'Test1', 
+                  blockType: 'match',
+                  children: [
+                  {
+                    id: 'last', 
+                    blockType: 'variable',
+                    children: []
+                  }
+              ]}
+            ]},
+            {
+              id: 'Fall', 
+              blockType: 'loadmessage',
+              children: []
+            },
+            {
+              id: 'Winter', 
+              blockType: 'replymessage',
+              children: []
+            },
+          ],
+        },
+        {
+          id: 'About Us',
+          blockType: 'sendmessage',
+          children: [],
+        },
+        {
+          id: 'My Account',
+          blockType: 'match',
+          children: [
+            {
+              id: 'Addresses', 
+              blockType: 'replymessage',
+              children: []
+            },
+            {
+              id: 'Order History', 
+              blockType: 'sendmessage',
+              children: []
+            },
+          ],
+        },
+    ]
 };
 
 export const varaBlocksSlice = createSlice({
     name: "VaraBlocksData",
     initialState,
     reducers: {
-        addBlockToInit: (state, block) => {
+        // actions to modify contract logic
+        addBlockToInit: (state, block: {
+            payload: TreeItem,
+            type: string
+        }) => {
             state.initBlocks = [block.payload, ...state.initBlocks];
         },
         setBlocksOnInit: (state, blocks) => {
@@ -36,6 +190,140 @@ export const varaBlocksSlice = createSlice({
         setBlocksOnHandle: (state, blocks) => {
             state.handleBlocks = blocks.payload;
         },
+
+
+
+        // Actions to modify structs
+        addStructToContract: (state, newStruct: {
+            payload: {
+                newStructId: string,
+            };
+            type: string;
+        }) => {
+            const newAttribute: StructAttributeI = {};
+            newAttribute[generatePassword()] = {
+                attributeName: "",
+                attributeType: {
+                    ActorId: null
+                },
+                attributeVal: {
+                    ActorIdVal: '0x00'
+                }
+            };
+
+            state.structs[newStruct.payload.newStructId] = {
+                structName: "",
+                attributes: {
+                    ...newAttribute
+                }
+            };
+        },
+        addAttributeToStruct: (state, attributeData: {
+            payload: {
+                structId: string,
+                attributeId: string,
+            };
+            type: string;
+        }) => {
+            const structId = attributeData.payload.structId;
+            const newAttributeId = attributeData.payload.attributeId;
+            state.structs[structId].attributes[newAttributeId] = {
+                attributeName: '',
+                attributeType: {
+                    ActorId: null
+                },
+                attributeVal: {
+                    ActorIdVal: '0x00'
+                }
+            };
+        },
+        editStructTitle: (state, enumData: {
+            payload: {
+                structId: string,
+                newTitle: string
+            };
+            type: string;
+        }) => {
+            if (Object.keys(state.structs).find((structId) => structId === enumData.payload.structId))
+                state.structs[enumData.payload.structId].structName = enumData.payload.newTitle;
+            else
+                console.log("Struct does not exists!");
+        },
+        editStructAttributeName: (state, attributeData: {
+            payload: {
+                structId: string,
+                attributeId: string,
+                attributeName: string
+            };
+            type: string;
+        }) => {
+            const attributeStructId = attributeData.payload.structId;
+            const attributeId = attributeData.payload.attributeId;
+            const newName = attributeData.payload.attributeName;
+            if (Object.keys(state.structs).find((structId) => structId === attributeStructId))
+                if (Object.keys(state.structs[attributeStructId].attributes).find(
+                    (structAttributeId) => structAttributeId === attributeId))
+                    state.structs[attributeStructId].attributes[attributeId].attributeName = newName;
+                else
+                    console.log("Struct attribute does  not exists!");
+            else
+                console.log("Struct does not exists!");
+        },
+        editStructAttributeType: (state, attributeData: {
+            payload: {
+                structId: string,
+                attributeId: string,
+                newType: VirtualContractTypes
+            };
+            type: string;
+        }) => {
+            const attributeStructId = attributeData.payload.structId;
+            const attributeId = attributeData.payload.attributeId;
+            const newType = attributeData.payload.newType;
+            if (Object.keys(state.structs).find((structId) => structId === attributeStructId))
+                if (Object.keys(state.structs[attributeStructId].attributes).find(
+                    (structAttributeId) => structAttributeId === attributeId))
+                    state.structs[attributeStructId].attributes[attributeId].attributeType = newType;
+                else
+                    console.log("Struct attribute does  not exists!");
+            else
+                console.log("Struct does not exists!");
+        },
+        removeStructOfContract: (state, enumIdToDelete: {
+            payload: string;
+            type: string;
+        }) => {
+            delete state.structs[enumIdToDelete.payload];
+        },
+        removeAttributeFromStruct: (state, attribute: {
+            payload: {
+                structId: string,
+                attributeId: string,
+            };
+            type: string;
+        }) => {
+            const attributeStructId = attribute.payload.structId;
+            const attributeId = attribute.payload.attributeId;
+
+
+            if (Object.keys(state.structs).find((structId) => structId === attributeStructId)) {
+                const attributes = Object.keys(state.structs[attributeStructId].attributes);
+                if (attributes.length === 1) {
+                    console.log("Struct cant be with zero attributes!");
+                    return;
+                }
+                if (attributes.find(
+                    (structAttributeId) => structAttributeId === attributeId))
+                    delete state.structs[attributeStructId].attributes[attributeId];
+                else
+                    console.log("Struct attribute does  not exists!");
+            } else
+                console.log("Struct does not exists!");
+        },
+
+
+
+        // Actions to modify esnums
         addEnumToContract: (state, newEnum: {
             payload: {
                 newEnumId: string,
@@ -58,7 +346,6 @@ export const varaBlocksSlice = createSlice({
             type: string;
         }) => {
                 if (Object.keys(state.enums).find((enumId) => enumId === variant.payload.enumId))
-                // state.enums[variant.payload.enumId].variants = enumData.payload.newTitle;
                 state.enums[variant.payload.enumId].variants[variant.payload.variantId] = "";
             else
                 console.log("Enum does not exists!");
@@ -125,12 +412,21 @@ export const {
     addBlockToHandle,
     setBlocksOnInit,
     setBlocksOnHandle,
+
     addEnumToContract,
     addVariantToEnum,
     editEnumTitle,
     editVariantToEnum,
     removeEnumOfContract,
-    removeVariantInEnum
+    removeVariantInEnum,
+
+    addStructToContract,
+    addAttributeToStruct,
+    editStructTitle,
+    editStructAttributeName,
+    editStructAttributeType,
+    removeStructOfContract,
+    removeAttributeFromStruct
 } = varaBlocksSlice.actions;
 
 export default varaBlocksSlice.reducer;

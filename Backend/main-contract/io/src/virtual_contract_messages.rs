@@ -77,6 +77,9 @@ pub enum VirtualContractErrors {
         struct_name: StructName,
         attribute: StructAttributeName
     },
+    BadAssingToStructAttribute {
+        expected: VirtualContractTypes,
+    },
     ControlFlowDoesNotMatch {
         expected: String,
     },
@@ -93,10 +96,14 @@ pub enum VirtualContractErrors {
     MetadataInContractDoesNotExists {
         metadata_variant_inexistent: String
     },
+    CantChangeStateAttribute {
+        reason: String,
+        struct_state: String,
+        struct_attribute: String
+    },
     ReplyMessageAlreadySend,
     EnumNamenCantBeEmpty,
     EnumVariantNameCantBeEmpty,
     StructNameCantBeEmpty,
-    NameCantBeEmpty,
-    ErrorGettingMessagesToSend
+    NameCantBeEmpty
 }

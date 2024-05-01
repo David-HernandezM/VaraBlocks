@@ -5,9 +5,14 @@ use super::virtual_contract_struct::*;
 use super::virtual_contract_enum::*;
 use super::virtual_contract_messages::*;
 use super::virtual_contract_state_handlers::*;
-use super::virtual_contract_types::VirtualContractTypes;
+use super::virtual_contract_types::{
+    VirtualContractTypes,
+    VirtualContractTypesVal
+};
 use super::virtual_contract_format::VirtualContractData;
 use crate::{ContractAction, ContractEvent};
+
+pub type VirtualContractStateType = Option<(StructName, Option<ContractStruct>)>;
 
 #[derive(Encode, Decode, TypeInfo, Clone)]
 #[codec(crate = gstd::codec)]
@@ -27,7 +32,9 @@ pub struct VirtualContractMetadata {
     pub handle: MetadataTypes
 }
 
-#[derive(Clone)]
+#[derive(Encode, Decode, TypeInfo, Clone)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
 pub struct UsersMessages {
     pub last_message_send: Option<(EnumName, EnumNameVariant)>,
     pub last_messages: Vec<(EnumName, EnumNameVariant)>
@@ -44,6 +51,8 @@ pub struct VirtualContract {
     pub menssages_send: HashMap<ActorId, UsersMessages>
 }
 
+// Implement VirtualContractData, this works to send Virtual Contract to the contract and
+// transform data to a new Virtual Contract.
 impl From<VirtualContractData> for VirtualContract {
     fn from(value: VirtualContractData) -> Self {
         let VirtualContractData {
@@ -55,8 +64,21 @@ impl From<VirtualContractData> for VirtualContract {
             structs
         } = value;
 
+        let state = match state {
+            Some(state_data) => {
+                let (struct_name, _) = state_data;
+                Some((struct_name, None))
+            },
+            None => None
+        };
+
+        let structs_data: Vec<(String, ContractStruct)> = structs
+            .into_iter()
+            .map(|(struct_name, struct_data)| (struct_name, struct_data.into()))
+            .collect();
+        
         let enums =  HashMap::from_iter(enums.into_iter());
-        let structs = HashMap::from_iter(structs.into_iter());
+        let structs = HashMap::from_iter(structs_data.into_iter());
 
         Self {
             metadata,
@@ -71,30 +93,90 @@ impl From<VirtualContractData> for VirtualContract {
     }
 }
 
+
+
+
+
+
 // Impl for related functios in struct
 impl VirtualContract {
+    fn struct_contract_from_state(contract_state: &mut VirtualContractStateType) -> &mut ContractStruct {
+        contract_state
+            .as_mut()
+            .unwrap()
+            .1
+            .as_mut()
+            .unwrap()
+    }
+
+    fn modify_string_state_attribute(struct_state: &mut ContractStruct, attribute_name_to_modify: &str, action: &StringActionsToModify) -> Result<(), VirtualContractMessage> {
+        // This method does not have checkers, because we need to check before that
+        // all data is correct before do changes.
+
+
+        let attribute_to_modify  = struct_state.attributes
+            .get_mut(attribute_name_to_modify)
+            .unwrap();
+
+        match action {
+            StringActionsToModify::ChangeTo(new_string) => {
+                attribute_to_modify.attribute_val = VirtualContractTypesVal::StringVal(
+                    new_string.clone()
+                );
+            },
+            StringActionsToModify::ClearString => {
+                attribute_to_modify.attribute_val = VirtualContractTypesVal::StringVal(
+                    String::new()
+                );
+            },
+            StringActionsToModify::ConcatString(string_to_concat) => {
+                let VirtualContractTypesVal::StringVal(value) = attribute_to_modify.attribute_val.clone() else {
+                    return Err(VirtualContractMessage::Error(
+                        VirtualContractErrors::BadAssingToStructAttribute { 
+                            expected: VirtualContractTypes::String 
+                        }
+                    ));
+                };
+
+                attribute_to_modify.attribute_val = VirtualContractTypesVal::StringVal(
+                    format!("{}{}", value, string_to_concat)
+                );
+            }
+        }
+        Ok(())
+    }
+
+    // This related function works to init the state of a virtual contract
     pub fn init_contract_state(virtual_contract: &mut VirtualContract) -> Result<(), VirtualContractMessage> {
+        // If contract does not have state, it ok
         if let None = virtual_contract.state {
             return Ok(());
         }
 
+        // if contract has state, get the struct name of the state
         let struct_name = &virtual_contract
             .state
             .as_ref()
             .unwrap()
             .0;
 
+        // if struct name does not have a nave, return an error and finish
+        // the execution of virtual contract
         if struct_name == "" {
             return Err(VirtualContractMessage::Error(
                 VirtualContractErrors::StructNameCantBeEmpty
             ));
         }
 
+        // Then, check if the name exists, if not, return an error, but if exists
+        // it creates a new default instance of the enum.
         let new_struct_instance = match virtual_contract.create_intance_of_struct(struct_name) {
             Ok(new_struct) => new_struct,
             Err(error_message) => return Err(error_message)
         };
 
+        // And, we put the struct on the state, with this, the virtual contract now
+        // has a virtual state.
         virtual_contract
             .state
             .as_mut()
@@ -105,17 +187,13 @@ impl VirtualContract {
     }
 
     pub fn send_message_to(to: ActorId, message: EnumVal) {
-        // println!("MANDANDO MENSAJE A {to}");
-        // println!("Enum: {}, variante: {}\n", message.enum_from, message.val);
-        // msg::send(to, ContractEvent::MeesageOfVirtualContract(message), 0)
-        //     .expect("Error sending message of virtual contract");
+        msg::send(to, ContractEvent::MeesageOfVirtualContract(message), 0)
+            .expect("Error sending message");
     }
-
+    
     pub fn send_message_reply(message: EnumVal) {
-        // println!("MANDANDO MENSAJE REPLY A MI PROPIA ADDRESS");
-        // println!("Enum: {}, variante: {}\n", message.enum_from, message.val);
-        // msg::reply(ContractEvent::MeesageOfVirtualContract(message), 0)
-        //     .expect("Error sending message of virtual contract");
+        msg::send(msg::source(), ContractEvent::MeesageOfVirtualContract(message), 0)
+            .expect("Error sending message");
     }
 
     pub fn get_enum_name_in_metadata<'a>(virtual_contract: &'a VirtualContract, check_in: &str) -> Result<Option<&'a EnumName>, VirtualContractMessage> {
@@ -173,7 +251,7 @@ impl VirtualContract {
 
     pub fn enum_data_from_variable(variable: &Variable) -> Result<&EnumVal, VirtualContractMessage> {
         if let VirtualContractTypes::Enum = variable.var_type {
-            let VirtualContractTypes::EnumVal(enum_val) = &variable.var_value else {
+            let VirtualContractTypesVal::EnumVal(enum_val) = &variable.var_value else {
                 return Err(VirtualContractMessage::Error(
                     VirtualContractErrors::VariableHasWrongTypes { 
                         variable_name: variable.variable_name.clone()
@@ -206,6 +284,14 @@ impl VirtualContract {
         None
     }
 }
+
+
+
+
+
+
+
+
 
 // Impl for check contract data
 impl VirtualContract {
@@ -368,12 +454,7 @@ impl VirtualContract {
             return Ok(());
         };
 
-        let has_attribute = struct_data.attributes
-            .iter()
-            .find(|attribute| {
-                attribute.attribute_name == *struct_attribute
-            })
-            .is_some();
+        let has_attribute = struct_data.attributes.contains_key(struct_attribute);
 
         if !has_attribute {
             return Err(VirtualContractMessage::Error(
@@ -385,6 +466,44 @@ impl VirtualContract {
         }
 
         Ok(())
+    }
+
+    fn struct_attribute_eq_to(&self, struct_name: &str, struct_attribute_name: &str, type_to_compare: VirtualContractTypes, error_message: &str) -> Result<(), VirtualContractMessage> {
+        match self.struct_attribute_is_of_type(struct_name, struct_attribute_name, type_to_compare) {
+            Ok(type_is_correct) => {
+                if !type_is_correct {
+                    return Err(VirtualContractMessage::Error(
+                        VirtualContractErrors::CantChangeStateAttribute { 
+                            reason: error_message.to_string(),
+                            struct_state: struct_name.to_string(), 
+                            struct_attribute: struct_attribute_name.to_string() 
+                        }
+                    ));
+                }
+            },
+            Err(error_message) => {
+                return Err(error_message);
+            }
+        }
+
+        Ok(())
+    }
+
+    fn struct_attribute_is_of_type(&self, struct_name: &str, struct_attribute_name: &str, type_to_compare: VirtualContractTypes) -> Result<bool, VirtualContractMessage> {
+        if let Err(error_message) = self.struct_attribute_exists(struct_name, struct_attribute_name) {
+            return Err(error_message);
+        }
+
+        // we can access the data, because we check before struct data
+        let struct_data = self.structs
+            .get(struct_name)
+            .unwrap();
+
+        let struct_attribute = struct_data.attributes
+            .get(struct_attribute_name)
+            .unwrap();
+
+        Ok(struct_attribute.attribute_type == type_to_compare)
     }
 
     fn enum_exist(&self, variant: &EnumName) -> Result<(), VirtualContractMessage> {
@@ -426,9 +545,17 @@ impl VirtualContract {
     }
 }
 
+
+
+
+
+
+
+
+
 // Impl for logic in the virtual contract
 impl VirtualContract {
-    pub fn handle_message(&mut self, message: EnumVal) -> Result<VirtualContractMessage, VirtualContractMessage> {
+    pub fn handle_message(&mut self, message: EnumVal) -> Result<(VirtualContractMessage, Vec<MessageToSend>), VirtualContractMessage> {
         // With this check, we are sure that the reveived message is correct.
 
         let codeblock_from = if self.initialized {
@@ -474,6 +601,8 @@ impl VirtualContract {
         let mut messages_to_send = Vec::new();
         let mut reply_already_send = false;
 
+        let mut virtual_contract_state = self.state.clone();
+        let mut state_change = false;
 
         let code_block = if !self.initialized {
             if let Err(error_message) = VirtualContract::init_contract_state(self) {
@@ -497,56 +626,105 @@ impl VirtualContract {
                 match block {
                     // Manage of the block of state change
                     CodeBlock::ModifyState(attribute_to_modify) => {
-                        // If the virtual contract does not have state, return an error because cant 
-                        // moodify None.
-                        if let None = self.state {
-                            return Err(VirtualContractMessage::Error(
-                                VirtualContractErrors::ContractDontHaveState
-                            ));
-                        }
 
-                        // Then, we obtain a reference of the name of the struct state of the 
-                        // virtual contract (its correct because before we check the state)
-                        let state_struct_name = self
-                            .state
-                            .as_ref()
-                            .unwrap()
-                            .0
-                            .clone();
+                        state_change = true;
+
+                        // Obtain the name of the struct state of the contract, if its None, we cant
+                        // change the state.
+                        let state_struct_name = match self.contract_state_name() {
+                                Some(contract_state_name) => contract_state_name,
+                                None => return Err(VirtualContractMessage::Error(
+                                        VirtualContractErrors::ContractDontHaveState
+                                    ))
+                            };
 
                         // Obtain the attribute name to modify
-                        let state_attribute_to_modify = attribute_to_modify.attribute_name().to_string();
+                        let state_attribute_to_modify = attribute_to_modify
+                            .attribute_name();
 
+                        // // check if the attribute to change exists, if not, finish the program and
+                        // if let Err(error_message) = self.struct_attribute_exists(state_struct_name, state_attribute_to_modify) {
+                        //     return Err(error_message);
+                        // }
+
+                        
                         match attribute_to_modify {
                             StateAttributeToModify::Vec { 
                                 action ,
                                 ..
                             } => {
-                                
+                                if let Err(error_message) = self.struct_attribute_eq_to(
+                                    state_struct_name, 
+                                    state_attribute_to_modify, 
+                                    VirtualContractTypes::Vec,
+                                    "Cant change state attribute, expected type: Vec"
+                                ) {
+                                    return Err(error_message);
+                                }
+
+
+
                             },
                             StateAttributeToModify::String { 
                                 action ,
                                 ..
                             } => {
+                                if let Err(error_message) = self.struct_attribute_eq_to(
+                                    state_struct_name, 
+                                    state_attribute_to_modify, 
+                                    VirtualContractTypes::String,
+                                    "Cant change state attribute, expected type: String"
+                                ) {
+                                    return Err(error_message);
+                                }
 
+                                
+                                if let Err(error_message) = VirtualContract::modify_string_state_attribute(
+                                    VirtualContract::struct_contract_from_state(&mut virtual_contract_state), 
+                                    state_attribute_to_modify,
+                                    action
+                                ) {
+                                    return Err(error_message);
+                                }
                             },
                             StateAttributeToModify::INum { 
                                 action,
                                 ..
                             } => {
-
+                                if let Err(error_message) = self.struct_attribute_eq_to(
+                                    state_struct_name, 
+                                    state_attribute_to_modify, 
+                                    VirtualContractTypes::INum,
+                                    "Cant change state attribute, expected type: INum"
+                                ) {
+                                    return Err(error_message);
+                                }
                             },
-                            StateAttributeToModify::Unum { 
+                            StateAttributeToModify::UNum { 
                                 action,
                                 .. 
                             } => {
-
+                                if let Err(error_message) = self.struct_attribute_eq_to(
+                                    state_struct_name, 
+                                    state_attribute_to_modify, 
+                                    VirtualContractTypes::UNum,
+                                    "Cant change state attribute, expected type: UNum"
+                                ) {
+                                    return Err(error_message);
+                                }
                             },
                             StateAttributeToModify::Enum { 
                                 variant,
                                 ..
                             } => {
-
+                                if let Err(error_message) = self.struct_attribute_eq_to(
+                                    state_struct_name, 
+                                    state_attribute_to_modify, 
+                                    VirtualContractTypes::Enum,
+                                    "Cant change state attribute, expected type: Enum"
+                                ) {
+                                    return Err(error_message);
+                                }
                             }
                         }
                     },
@@ -634,7 +812,7 @@ impl VirtualContract {
 
                         let mut variable_to_storage = variable.clone();
 
-                        variable_to_storage.var_value = VirtualContractTypes::EnumVal(
+                        variable_to_storage.var_value = VirtualContractTypesVal::EnumVal(
                             EnumVal {
                                 enum_from: message.enum_from.clone(),
                                 val: message.val.clone()
@@ -709,11 +887,6 @@ impl VirtualContract {
                     CodeBlock::Return(return_type) => {
                         // Mejorar el tema del return
                     }
-                    _ => {
-                        return Err(VirtualContractMessage::Error(
-                            VirtualContractErrors::ContractDontHaveState
-                        ));
-                    }
                 }
             }
 
@@ -734,19 +907,24 @@ impl VirtualContract {
             scopes.pop();
         }
 
-        // for message in messages_to_send.into_iter() {
-        //     if let MessageTypeToSend::Reply = message.message_type_to_send {
-        //         VirtualContract::send_message_reply(message.message);
-        //     } else {
-        //         VirtualContract::send_message_to(message.to, message.message);
-        //     }
-        // }
+
+        for message in messages_to_send.iter() {
+            if let MessageTypeToSend::Reply = message.message_type_to_send {
+                VirtualContract::send_message_reply(message.message.clone());
+            } else {
+                VirtualContract::send_message_to(message.to.clone(), message.message.clone());
+            }
+        }
 
         if !self.initialized {
             self.initialized = true;
         }
 
-        Ok(VirtualContractMessage::MessagesToSend(messages_to_send))
+        if state_change {
+            self.state = virtual_contract_state;
+        }
+
+        Ok((VirtualContractMessage::MessageProcessed, messages_to_send))
     }
 
 
@@ -832,7 +1010,7 @@ impl VirtualContract {
         }
 
         if let VirtualContractTypes::Enum = variable.var_type {
-            let VirtualContractTypes::EnumVal(EnumVal { enum_from, val }) = &variable.var_value else {
+            let VirtualContractTypesVal::EnumVal(EnumVal { enum_from, val }) = &variable.var_value else {
                 return Err(VirtualContractMessage::Error(
                     VirtualContractErrors::VariableHasWrongTypes { 
                         variable_name: variable.variable_name.clone() 
@@ -876,39 +1054,21 @@ impl VirtualContract {
 
     }
 
-    fn modify_string_state_attribute(&mut self, attribute_name_to_modify: &str, action: &StringActionsToModify) -> Result<(), VirtualContractMessage> {
-        if let None = self.state {
-            return Err(VirtualContractMessage::Error(
-                VirtualContractErrors::ContractDontHaveState
-            ));
+    fn contract_state_name(&self) -> Option<&str> {
+        if self.state.is_none() {
+            return None;
         }
 
-        // Primero, checar que dato a cambiar sea correcto, para evitar 
-        // que se asigne un valor que no es especifico del tipo declarado
-        // en el atributo
+        let state_name = &self
+        .state
+        .as_ref()
+        .unwrap()
+        .0[..];
 
-        match action {
-            StringActionsToModify::ChangeTo(new_string) => {
-                // self.state
-                //     .as_mut()
-                //     .unwrap()
-                //     .1
-                //     .as_mut()
-                //     .unwrap()
-                //     .attributes
-                //     .iter_mut()
-                //     .find(|attribute| {
-                //         attribute.attribute_name == attribute_name_to_modify
-                //     })
-                //     .unwrap_unchecked();
-            },
-            StringActionsToModify::ClearString => {
-
-            },
-            StringActionsToModify::ConcatString(string_to_concat) => {
-
-            }
-        }
-        Ok(())
+        Some(state_name)
     }
 }
+
+
+
+

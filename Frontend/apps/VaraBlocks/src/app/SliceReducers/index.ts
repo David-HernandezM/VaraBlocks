@@ -3,10 +3,19 @@ export {
     addBlockToHandle,
     setBlocksOnInit,
     setBlocksOnHandle,
+
     addEnumToContract,
     addVariantToEnum,
     editEnumTitle,
     editVariantToEnum,
     removeEnumOfContract,
-    removeVariantInEnum
+    removeVariantInEnum,
+    
+    addStructToContract,
+    addAttributeToStruct,
+    editStructTitle,
+    editStructAttributeName,
+    editStructAttributeType,
+    removeStructOfContract,
+    removeAttributeFromStruct
 } from "./VaraBlocksData/varaBlocksDataSlice";

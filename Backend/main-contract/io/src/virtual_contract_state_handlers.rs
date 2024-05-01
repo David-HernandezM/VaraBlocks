@@ -19,7 +19,7 @@ pub enum StateAttributeToModify {
         attribute_name: String,
         action: INumActionsToModify
     },
-    Unum {
+    UNum {
         attribute_name: String,
         action: UNumActionsToModify
     },
@@ -35,7 +35,7 @@ impl StateAttributeToModify {
             StateAttributeToModify::Vec { attribute_name, ..} => attribute_name,
             StateAttributeToModify::String { attribute_name, ..} => attribute_name,
             StateAttributeToModify::INum { attribute_name, ..} => attribute_name,
-            StateAttributeToModify::Unum { attribute_name, ..} => attribute_name,
+            StateAttributeToModify::UNum { attribute_name, ..} => attribute_name,
             StateAttributeToModify::Enum { attribute_name, ..} => attribute_name,
         }
     }

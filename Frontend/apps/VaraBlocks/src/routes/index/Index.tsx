@@ -50,13 +50,16 @@ export default function Index() {
             let virtualContractTest: VirtualContractData = {
               metadata: {
                 init: {
-                  NoValue: null
+                  // NoValue: null
+                  In: ['ContractTestInit']
                 },
                 handle: {
-                  InOut: ['ContractActions', 'ContractEvent']
+                  // InOut: ['ContractActions', 'ContractEvent']
+                  Out: ['ContractTestOut']
                 }
               },
-              state: ['ContractState', null],
+              // state: ['ContractState', null],
+              state: null,
               initCode: [
                 {
                   Variable: {
@@ -191,17 +194,6 @@ export default function Index() {
                 ]
               ]
             }
-
-
-// 3,064.2049
-// 3,064.1871  Almadenamiento de contrato
-
-// 3,064.1574
-// 3,064.1412  Mensaje Ping
-
-// 3,064.1412
-// 
-
           
             let x = await sendMessage(
               account.account.decodedAddress,
@@ -209,7 +201,7 @@ export default function Index() {
               MAIN_CONTRACT.programId,
               ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
               {
-                Test1: virtualContractTest
+                SetVirtualContract: virtualContractTest
               },
               0,
               "Se proceso el mensaje!",
@@ -281,6 +273,39 @@ export default function Index() {
         }}>
           Send pong message
         </button>
+        <button onClick={ async () => {
+          console.log("Sending message to contract");
+          if (!account.account) {
+            console.log("Account isnt initialized");
+            return;
+          }
+
+          //3,226.0679
+          //
+
+          await sendMessage(
+            account.account.decodedAddress,
+            account.account.meta.source,
+            MAIN_CONTRACT.programId,
+            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+            // {
+            //   Test1: virtualContractTest
+            // },
+            {
+              SendMessageToVirtualContract: {
+                enumFrom: 'ContractActions',
+                val: 'Pang'
+              }
+            },
+            0,
+            "Se proceso el mensaje!",
+            "No se proceso el mensaje",
+            "Checando si se procesa el mensaje",
+            "VaraBlocks action:"
+          );
+        }}>
+          Send pang message
+        </button>
         <button onClick={async () => {
           console.log("Sending message to contract");
           if (!account.account) {
@@ -294,7 +319,7 @@ export default function Index() {
             MAIN_CONTRACT.programId,
             ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
             {
-              AddTestVirtualContract: null
+              SetDefaultVirtualContract: null
             },
             0,
             "Se proceso el mensaje!",
@@ -305,7 +330,7 @@ export default function Index() {
         }}>
           Set default contract
         </button>
-        <button onClick={async () => {
+        {/* <button onClick={async () => {
           console.log("Sending message to contract");
           if (!account.account) {
             console.log("Account isnt initialized");
@@ -328,7 +353,7 @@ export default function Index() {
           );
         }}>
           Send tests
-        </button>
+        </button> */}
         {/* <button onClick={async () => {
           console.log("Sending message to contract");
           if (!account.account) {

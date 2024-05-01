@@ -38,8 +38,8 @@ import type {FlattenedItem, SensorContext, TreeItems} from './types';
 import {sortableTreeKeyboardCoordinates} from './keyboardCoordinates';
 import {SortableTreeItem} from './components';
 import {CSS} from '@dnd-kit/utilities';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { setBlocks } from '@/app/SliceReducers/VaraBlocksData/varaBlocksDataSlice';
+import { useAppDispatch } from '@/app/hooks';
+// import { setBlocks } from '@/app/SliceReducers/VaraBlocksData/varaBlocksDataSlice';
 
 
 
@@ -73,8 +73,8 @@ const dropAnimationConfig: DropAnimation = {
 };
 
 interface Props {
-  items: TreeItems,
-  setItems: any,
+  setBlocks: any,
+  varaBlocksState: TreeItems,
   collapsible?: boolean;
   // defaultItems?: TreeItems;
   indentationWidth?: number;
@@ -83,8 +83,8 @@ interface Props {
 }
 
 export function SortableTree({
-  items, 
-  setItems,
+  setBlocks,
+  varaBlocksState,
   collapsible,
   // defaultItems = initialItems,
   indicator = true,
@@ -92,7 +92,7 @@ export function SortableTree({
   removable = true
 }: Props) {
   // const [items, setItems] = useState(() => defaultItems);
-  const varaBlocksState = useAppSelector((state) => state.varaBlocksTree.blocks);
+  // const varaBlocksState = useAppSelector((state) => state.VaraBlocksData.initBlocks);
   const varaBlocksDispatch = useAppDispatch();
 
   const [activeId, setActiveId] = useState<UniqueIdentifier | null>(null);
