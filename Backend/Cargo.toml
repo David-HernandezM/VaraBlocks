@@ -3,6 +3,7 @@ resolver = "2"
 # Keep in the lexicographic order!
 # Remove a member if it's used as a dependency in the workspace.
 members = [
+    "contract-test",
     "main-contract",
     "oracle-server",
 ]
@@ -20,6 +21,7 @@ publish = false
 # Local IO-crates
 # Keep in the lexicographic order!
 
+contract-test-io.path = "contract-test/io"
 main-contract-io.path = "main-contract/io"
 
 # Gear

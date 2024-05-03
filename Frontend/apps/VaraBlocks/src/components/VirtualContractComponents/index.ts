@@ -3,3 +3,4 @@ export { VirtualContractStruct } from "./VirtualContractStruct/VirtualContractSt
 export { VirtualContractEnumsContainer } from "./VirtualContractEnumsContainer/VirtualContractEnumsContainer";
 export { VirtualContractStructsContainer } from "./VirtualContractStructsContainer/VirtualContractStructsContainer";
 export { VirtualContractData } from "./VirtualContractData/VirtualContractData";
+export { VirtualContractMessageHandler } from "./VirtualContractMessageHandler/VirtualContractMessageHandler";

@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { VirtualContractEnum, VirtualContractStruct, VirtualContractData } from "@/components";
+import { 
+    VirtualContractEnum, 
+    VirtualContractStruct, 
+    VirtualContractData,
+    VirtualContractMessageHandler
+} from "@/components";
 import { generatePassword } from "@/app/utils"; 
 import { useAppDispatch, useAppSelector, useContractUtils } from "@/app/hooks";
 import { 
@@ -29,6 +34,7 @@ export default function VaraEditor() {
     const [structsEditorOpen, setStructsEditorOpen] = useState(false);
     const [enumsEditorOpen, setEnumsEditorOpen] = useState(false);
     const [contractEditorOpen, setContractEditorOpen] = useState(true);
+    const [virtualContractDataOpen, setVirtualContractDataOpen] = useState(false);
     const [initCodeEditionOpen, setInitCodeEditionOpen] = useState(true);
     const [handleCodeEditionOpen, setHandleCodeEditionOpen] = useState(false);
     const [accountHasVirtualContract, setAccountHasVirtualContract] = useState(false);
@@ -38,10 +44,11 @@ export default function VaraEditor() {
         readState
     } = useContractUtils();
 
-    const configEditionButtonsPressed = (btn1: boolean, btn2: boolean, btn3: boolean) => {
+    const configEditionButtonsPressed = (btn1: boolean, btn2: boolean, btn3: boolean, btn4: boolean) => {
         setContractEditorOpen(btn1);
         setStructsEditorOpen(btn2);
         setEnumsEditorOpen(btn3);
+        setVirtualContractDataOpen(btn4);
     }
 
     const configEditionBlocksButtonsPressed = (initButton: boolean, handleButton: boolean) => {
@@ -106,21 +113,27 @@ export default function VaraEditor() {
             <ul className="varaeditor__edition-options">
                 <li 
                     className={contractEditorOpen ? "varaeditor__edition-options--selected" : ""}
-                    onClick={() => configEditionButtonsPressed(true, false, false)}
+                    onClick={() => configEditionButtonsPressed(true, false, false, false)}
                 >
                     Contract editor
                 </li>
                 <li 
                     className={structsEditorOpen ? "varaeditor__edition-options--selected" : ""}
-                    onClick={() => configEditionButtonsPressed(false, true, false)}
+                    onClick={() => configEditionButtonsPressed(false, true, false, false)}
                 > 
                     Structs editor
                 </li>
                 <li 
                     className={enumsEditorOpen ? "varaeditor__edition-options--selected" : ""}
-                    onClick={() => configEditionButtonsPressed(false, false, true)}
+                    onClick={() => configEditionButtonsPressed(false, false, true, false)}
                 >
                     Enums editor
+                </li>
+                <li 
+                    className={virtualContractDataOpen ? "varaeditor__edition-options--selected" : ""}
+                    onClick={() => configEditionButtonsPressed(false, false, false, true)}
+                >
+                    Virtual Contract Data
                 </li>
             </ul>
             <div className="varaeditor__container">
@@ -206,15 +219,6 @@ export default function VaraEditor() {
                                 }
                             </div>
                         </div>
-                        <div className="varaeditor__contract-editor-data">
-                            <VirtualContractData 
-                                accountHasVirtualContract={accountHasVirtualContract} 
-                                virtualContractData={{
-                                    virtualContractState,
-                                    virtualContractMetadata
-                                }}
-                            />
-                        </div>
                     </div>
                 }
                 {
@@ -249,6 +253,19 @@ export default function VaraEditor() {
                         }}>
                             Add Enum
                         </Button>
+                    </div>
+                }
+                {
+                    virtualContractDataOpen &&
+                    <div className="varaeditor__virtual-contract-data">
+                        <VirtualContractData 
+                            accountHasVirtualContract={accountHasVirtualContract} 
+                            virtualContractData={{
+                                virtualContractState,
+                                virtualContractMetadata
+                            }}
+                        />
+                        <VirtualContractMessageHandler />
                     </div>
                 }
             </div>

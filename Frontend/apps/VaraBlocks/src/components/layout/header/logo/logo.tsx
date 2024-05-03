@@ -5,7 +5,8 @@ import './logo.scss';
 const  Logo = () => {
   return (
     <Link to="/" className='header__a-logo'>
-      <NeuroSharkImagoType className="imagotype" />
+      <h1 style={{ color: "white" }}>VaraBlocks</h1>
+      {/* <NeuroSharkImagoType className="imagotype" /> */}
     </Link>
   );
 }

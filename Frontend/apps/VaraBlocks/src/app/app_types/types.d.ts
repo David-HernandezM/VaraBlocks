@@ -59,7 +59,16 @@ export interface ContractStruct {
 export interface StructAttribute {
     attributeName: StructAttributeName,
     attributeType: VirtualContractTypes,
-    attributeVal: VirtualContractTypes
+    attributeVal: VirtualContractTypesVal
+}
+
+export interface StructStringFormat {
+    structName: string,
+    attributes: {
+        attributeName: string,
+        attributeType: string,
+        attributeVal: string[]
+    }[]
 }
 
 
@@ -127,14 +136,6 @@ export type VirtualContractVecTypes =
     { VecEnum: EnumVal[] };
 
 export type VirtualContractTypes = 
-    { VecVal: VirtualContractVecTypes } |
-    { ActorIdVal: `0x${string}` } |
-    { INumVal: number } |
-    { UNumVal: number } |
-    { TextVal: string } |
-    { BooleanVal: boolean } |
-    { EnumVal: EnumVal } |
-    { VariableVal: string } |
     { Vec: null } |
     { ActorId: null } |
     { NoValue: null } |
@@ -145,7 +146,16 @@ export type VirtualContractTypes =
     { Text: null } |
     { Boolean: null } |
     { UnitValue: null };
- 
+
+export type VirtualContractTypesVal = 
+    { VecVal: VirtualContractVecTypes } |
+    { ActorIdVal: `0x${string}` } |
+    { INumVal: number } |
+    { UNumVal: number } |
+    { TextVal: string } |
+    { BooleanVal: boolean } |
+    { EnumVal: EnumVal } |
+    { VariableVal: string };
 
 
 export interface Match {
@@ -157,7 +167,7 @@ export interface Match {
 export interface Variable {
     variableName: string,
     isMutable: boolean,
-    varValue: VirtualContractTypes,
+    varValue: VirtualContractTypesVal,
     varType: VirtualContractTypes
     isParameter: boolean
 }

@@ -4,6 +4,10 @@ import { ACCOUNT_ID_LOCAL_STORAGE_KEY, SIGNLESS_STORAGE_KEY } from '@/app/consts
 import { HexString } from '@polkadot/util/types';
 import { GasInfo } from '@gear-js/api';
 import { Keyring } from '@polkadot/api';
+import { 
+  ContractStruct,
+  VirtualContractTypes
+} from './app_types/types';
 
 export function formatDate(input: string | number): string {
   const date = new Date(input);
@@ -120,4 +124,14 @@ export const generateRandomString = (length: number) => {
       retVal += charset.charAt(Math.floor(Math.random() * n));
   }
   return retVal;
+}
+
+export const virtualContractTypeToString = (virtualContractType: VirtualContractTypes): string => {
+  return Object.keys(virtualContractType)[0];
+}
+
+export const virtualContractStructToStringArray = (contractStruct: ContractStruct): string[] => {
+  const structData = [contractStruct.structName];
+
+
 }

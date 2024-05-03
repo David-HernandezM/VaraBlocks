@@ -76,27 +76,41 @@ export function VirtualContractData({
             {
                 accountHasVirtualContract ? (
                     <div className='virtual-contract-data__information'>
-                        <p className='virtual-contract-data__title'>
+                        <p className='virtual-contract-data__title virtual-contract-data__title--subtitle'>
                             Metadata - Init
                         </p>
                         {metadataToString(virtualContractData.virtualContractMetadata?.init ?? { NoValue: null })}
-                        <p className='virtual-contract-data__title'>
+                        <p className='virtual-contract-data__title virtual-contract-data__title--subtitle'>
                             Metadata - handle
                         </p>
                         {metadataToString(virtualContractData.virtualContractMetadata?.handle ?? { NoValue: null })}
-                        <p className='virtual-contract-data__title'>
-                            State
+                        <p className='virtual-contract-data__title virtual-contract-data__title--subtitle'>
+                            State: {
+                                virtualContractData.virtualContractState
+                                ? virtualContractData.virtualContractState.structName
+                                : "No state"
+                            }
                         </p>
                         {
-                            virtualContractData.virtualContractState ? (
-                                <p>
-                                    Account has state
-                                </p>
-                            ) : (
-                                <p>
-                                    Account does not has state
-                                </p>
-                            )
+                            virtualContractData.virtualContractState &&
+                            <div>
+                                    <p style={{textAlign: "center"}}>
+                                        {
+                                            virtualContractData.virtualContractState.structName
+                                        }
+                                    </p>
+                                    {
+                                        virtualContractData.virtualContractState.attributes.map((attribute) => {
+                                            return (
+                                                <p>
+                                                    {attribute.attributeName}
+                                                    {/* {attribute.attributeType}
+                                                    {attribute.attributeVal} */}
+                                                </p>
+                                            );
+                                        })
+                                    }
+                                </div>
                         }
                     </div>
                 ) : (

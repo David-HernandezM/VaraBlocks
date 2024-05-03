@@ -897,6 +897,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f7144d30dcf0fafbce74250a3963025d8d52177934239851c917d29f1df280c2"
 
 [[package]]
+name = "contract-test"
+version = "1.0.0"
+dependencies = [
+ "contract-test-io",
+ "gear-wasm-builder",
+ "gmeta",
+ "gstd",
+ "gtest",
+]
+
+[[package]]
+name = "contract-test-io"
+version = "1.0.0"
+dependencies = [
+ "gmeta",
+ "gstd",
+]
+
+[[package]]
 name = "convert_case"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"

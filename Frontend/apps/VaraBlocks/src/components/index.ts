@@ -14,6 +14,7 @@ export { VirtualContractStruct } from './VirtualContractComponents';
 export { VirtualContractEnumsContainer } from './VirtualContractComponents';
 export { VirtualContractStructsContainer } from './VirtualContractComponents';
 export { VirtualContractData } from './VirtualContractComponents';
+export { VirtualContractMessageHandler } from './VirtualContractComponents';
 
 export { ButtonAddComponent } from './ButtonAddComponent/ButtonAddComponent';
 export { DeleteButton } from './DeleteButton/DeleteButton';
