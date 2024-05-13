@@ -1,0 +1,11 @@
+.match-block__variable-select {
+    border-radius: 5px;
+    border: solid 1px gray;
+    min-width: 60px;
+    text-align: center;
+    padding: 3px;
+
+    & > * {
+        font-weight: 600;
+    }
+}

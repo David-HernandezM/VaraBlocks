@@ -15,7 +15,7 @@ import { MAIN_CONTRACT } from '@/app/consts';
 import { useAccount } from '@gear-js/react-hooks';
 import { ProgramMetadata } from '@gear-js/api';
 
-import { CodeBlock, Variable, ControlFlow, VirtualContractTypes, Match, SendMessage, SendReply, VirtualContractData, EnumVal } from '@/app/app_types/types';
+import { CodeBlock, Variable, ControlFlow, VirtualContractTypes, Match, SendMessage, SendReply, VirtualContractDataToSend, EnumVal } from '@/app/app_types/types';
 
 import { useAppDispatch } from '@/app/hooks';
 // import { addBlock } from '@/app/SliceReducers/VaraBlocksTree/varaBlocksTreeSlice';
@@ -47,7 +47,7 @@ export default function Index() {
               return;
             }
 
-            let virtualContractTest: VirtualContractData = {
+            let virtualContractTest: VirtualContractDataToSend = {
               metadata: {
                 init: {
                   // NoValue: null

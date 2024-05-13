@@ -1,13 +1,23 @@
 import { AlertContainerFactory, withoutCommas } from '@gear-js/react-hooks';
 import { InjectedAccountWithMeta } from '@polkadot/extension-inject/types';
-import { ACCOUNT_ID_LOCAL_STORAGE_KEY, SIGNLESS_STORAGE_KEY } from '@/app/consts';
+import { ACCOUNT_ID_LOCAL_STORAGE_KEY } from '@/app/consts';
 import { HexString } from '@polkadot/util/types';
 import { GasInfo } from '@gear-js/api';
-import { Keyring } from '@polkadot/api';
+// import { Keyring } from '@polkadot/api';
 import { 
-  ContractStruct,
+  BlockType,
+  // ContractEnum,
+  ContractEnumInterface,
+  // ContractStruct,
+  MetadataTypes,
+  SendMessage,
+  SendReply,
+  Variable,
+  VirtualContractStateType,
+  // StructStringFormat,
   VirtualContractTypes
 } from './app_types/types';
+import { VaraBlockCodeBlock, VaraBlockEnum } from './SliceReducers';
 
 export function formatDate(input: string | number): string {
   const date = new Date(input);
@@ -130,8 +140,137 @@ export const virtualContractTypeToString = (virtualContractType: VirtualContract
   return Object.keys(virtualContractType)[0];
 }
 
-export const virtualContractStructToStringArray = (contractStruct: ContractStruct): string[] => {
-  const structData = [contractStruct.structName];
+// export const virtualContractEnumToString = (contractEnum: ContractEnum): 
 
+// export const virtualContractStructToStringArray = (contractStruct: ContractStruct): StructStringFormat => {
+//   const structData = [contractStruct.structName];
 
+// }
+
+export const metadataHasOut = (metadata: MetadataTypes): string | null => {
+  const types = Object.keys(metadata)[0];
+
+  switch (types) {
+    case 'Out':
+      const inData = metadata as { Out: [string] };
+      return inData.Out[0];
+    case 'InOut':
+      const inOutData = metadata as { InOut: [string, string] };
+      return inOutData.InOut[1];
+    default:
+      return null;
+  }
 }
+
+export const metadataHasIn = (metadata: MetadataTypes): string | null => {
+  const types = Object.keys(metadata)[0];
+
+  switch (types) {
+    case 'In':
+      const inData = metadata as { In: [string] };
+      return inData.In[0];
+    case 'InOut':
+      const inOutData = metadata as { InOut: [string, string] };
+      return inOutData.InOut[0];
+    default:
+      return null;
+  }
+}
+
+export const firstVariantFromEnumI = (enumData: ContractEnumInterface): string | null => {
+  console.log('Se recibio:');
+  console.log(enumData);
+  console.log('Las variantes de lo que se recibio:');
+  console.log(enumData.variants);
+  
+  
+  for (const [_enumKey, enumVariantName] of Object.entries(enumData.variants)) {
+    console.log('Lo que se procesara');
+    console.log(enumVariantName);
+    
+    if (enumVariantName.trim() === '') continue;
+    return enumVariantName;
+  }
+
+  return null;
+
+  // for (const [variantId, variantName] in enumData.variants) {
+  //   const variantName = Object.values(variantData)[0];
+  //   console.log('Variant data:');
+    
+  //   console.log(variantData);
+    
+  //   console.log('Variant name get: ', variantName);
+  //   if (variantName.trim() === '') continue;
+  //   return variantName;
+  // }
+  // return null;
+}
+
+
+export const enumDataByName = (enumName: string, enumsData: VaraBlockEnum): ContractEnumInterface | null => {
+  const enumData = Object.entries(enumsData).find(([_, enumData]) => enumData.enumName === enumName);
+  if (enumData) {
+      return enumData[1];
+  } else {
+      return null;
+  }
+}
+
+export const separateInitAndHandleBlocks = (blocks: VaraBlockCodeBlock, blockType: BlockType): [VaraBlockCodeBlock, VaraBlockCodeBlock] => {
+  const initBlocks: VaraBlockCodeBlock = {};
+  const handleBlocks: VaraBlockCodeBlock = {};
+  switch (blockType) {
+    case 'loadmessage':
+      Object.entries(blocks).forEach(([blockId, block]) => {
+        const blockData = block as { LoadMessageI: { data: Variable, loadInInit: boolean } };
+        if (blockData.LoadMessageI.loadInInit) initBlocks[blockId] = block;
+        else handleBlocks[blockId] = block;
+      })
+      break;
+    case 'sendmessage':
+      Object.entries(blocks).forEach(([blockId, block]) => {
+        const blockData = block as { SendMessageI: { data: SendMessage, sendMessageInInit: boolean } };
+        if (blockData.SendMessageI.sendMessageInInit) initBlocks[blockId] = block;
+        else handleBlocks[blockId] = block;
+      })
+      break;
+    case 'replymessage':
+      Object.entries(blocks).forEach(([blockId, block]) => {
+        const blockData = block as { SendReplyI: { data: SendReply, sendReplyInInit: boolean } };
+        if (blockData.SendReplyI.sendReplyInInit) initBlocks[blockId] = block;
+        else handleBlocks[blockId] = block;
+      })
+      break;
+    default:
+      console.log('NO SE SEPARO NADAAAAA');
+      break;
+  }
+
+  return [initBlocks, handleBlocks];
+}
+
+export const formatMetadata = (metadataType: MetadataTypes): [string, string] => {
+  const mType = Object.keys(metadataType)[0];
+
+  switch (mType) {
+      case 'In':
+          const metadataTypeValueIn = metadataType as { In: [string] };
+          return [metadataTypeValueIn.In[0], 'NoValue'];
+      case 'Out':
+          const metadataTypeValueOut = metadataType as { Out: [string] };
+          return ['NoValue', metadataTypeValueOut.Out[0]];
+      case 'InOut':
+          const metadataTypeValueInOut = metadataType as { InOut: [string, string] };
+          return [metadataTypeValueInOut.InOut[0], metadataTypeValueInOut.InOut[1]];
+      default:
+          return ['NoValue', 'NoValue'];
+  }
+}
+
+export const formatStateType = (stateType: VirtualContractStateType): string => {
+  if (!stateType) return 'NoState';
+
+  return stateType[0];
+}
+

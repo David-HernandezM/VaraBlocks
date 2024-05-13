@@ -1,9 +1,20 @@
 // [TODO]: Agregar todos los tipos faltantes
 
+import { HexString } from "@gear-js/api";
+
 export type EnumName = string;
 export type EnumNameVariant = string;
 export type StructName = string;
 export type StructAttributeName = string;
+
+
+
+export type Result<T, E = Error> =
+    { ok: true; value: T } |
+    { ok: false; error: E };
+
+
+
 
 export type MetadataTypes =
     { In: [EnumName] } |
@@ -16,9 +27,11 @@ export interface VirtualContractMetadata {
     handle: MetadataTypes
 }
 
-export interface VirtualContractData {
+export type VirtualContractStateType = [EnumName, ContractStruct | null] | null;
+
+export interface VirtualContractDataToSend {
     metadata: VirtualContractMetadata,
-    state: [EnumName, ContractStruct | null] | null,
+    state: VirtualContractStateType,
     initCode: CodeBlock[],
     handleCode: CodeBlock[],
     enums: [EnumName, ContractEnum][],
@@ -112,20 +125,25 @@ export type ContractEnumType =
 
 
 
-
+export type BlockType = 'variable' | 'match' | 'matcharm' | 'loadmessage' | 'sendmessage' | 'replymessage' | 'empty';
 
 // [TODO]: Agregar valores faltantes
 export type CodeBlock = 
     { ControlFlow: ControlFlow } |
     { Variable: Variable } |
+    { VariableI: { data: Variable, variableInInit: boolean } } |
     { LoadMessage: Variable } |
+    { LoadMessageI: { data: Variable, loadInInit: boolean } } |
     { SendMessage: SendMessage } |
-    { SendReply: SendReply };
+    { SendMessageI: { data: SendMessage, sendMessageInInit: boolean } } |
+    { SendReply: SendReply } |
+    { SendReplyI: { data: SendReply, sendReplyInInit: boolean } };
 
 
 // [TODO]: Agregar valores faltantes
 export type ControlFlow = 
-    { Match: Match };    
+    { Match: Match } | 
+    { Match: { data: Match, matchArmsIds: string[], matchInInit: boolean } };
 
 // [TODO]: Agregar valores faltantes
 export type VirtualContractVecTypes = 
@@ -155,7 +173,8 @@ export type VirtualContractTypesVal =
     { TextVal: string } |
     { BooleanVal: boolean } |
     { EnumVal: EnumVal } |
-    { VariableVal: string };
+    { VariableVal: string } |
+    { NoValue: null };
 
 
 export interface Match {
@@ -177,7 +196,8 @@ export interface Variable {
 
 export interface SendMessage {
     message: EnumVal,
-    to: `0x${string}`
+    // to: HexString
+    to: string
 }
 
 export interface SendReply {

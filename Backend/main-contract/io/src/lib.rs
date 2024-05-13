@@ -27,7 +27,7 @@ use virtual_contract_utils::{
     MetadataTypes,
     VirtualContractMetadata
 };
-use virtual_contract_messages::VirtualContractMessage;
+use virtual_contract_messages::{VirtualContractErrors, VirtualContractMessage};
 use virtual_contract_types::VirtualContractVecTypes;
 use virtual_contract_format::{
     VirtualContractData,
@@ -51,14 +51,17 @@ impl Metadata for ProgramMetadata {
 pub struct Contract {
     pub owner: ActorId,
     pub virtual_contracts: BTreeMap<ActorId, VirtualContract>,
-    pub messages_of_virtual_contracts: BTreeMap<ActorId, Vec<EnumVal>>,
+    pub messages_of_virtual_contracts: BTreeMap<ActorId, Vec<VirtualContractMesssage>>,
     pub reservations: Vec<ReservationId>
 }
 
-// impl Contract {
-//     fn virtual_contract_of_user(self, )
-// }
-
+#[derive(Encode, Decode, TypeInfo, Clone)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub enum VirtualContractMesssage {
+    Message(EnumVal),
+    Error(VirtualContractErrors)
+}
 
 #[derive(Encode, Decode, TypeInfo)]
 #[codec(crate = gstd::codec)]
@@ -99,31 +102,6 @@ pub enum ContractStateReply {
     VirtualContract(VirtualContractState),
     VirtualContractMetadata(VirtualContractMetadata),
     VirtualContractState(Option<ContractStructFormat>),
-    MessagesFromVirtualContract(Vec<EnumVal>),
+    MessagesFromVirtualContract(Vec<VirtualContractMesssage>),
     AddresDoesNotHaveVirtualContract(ActorId)
 }
-
-#[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
-pub enum Test3 {
-    Option1(Test1),
-    Option2(Test2)
-}
-
-#[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
-pub enum Test1 {
-    Variant1,
-    Variant2(Box<Test2>)
-}
-
-#[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
-pub enum Test2 {
-    Variant1,
-    Variant2(Box<Test1>)
-}
-

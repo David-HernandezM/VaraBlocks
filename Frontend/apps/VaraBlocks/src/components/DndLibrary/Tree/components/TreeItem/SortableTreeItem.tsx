@@ -4,17 +4,19 @@ import {AnimateLayoutChanges, useSortable} from '@dnd-kit/sortable';
 import {CSS} from '@dnd-kit/utilities';
 
 import {TreeItem, Props as TreeItemProps} from './TreeItem';
-import { BlockType } from '../../types';
+import { BlockType } from '@/app/app_types/types'; 
 import {iOS} from '../../utilities';
 
 interface Props extends TreeItemProps {
   id: UniqueIdentifier;
+  blockType: BlockType;
+  isDisabled?: boolean;
 }
 
 const animateLayoutChanges: AnimateLayoutChanges = ({isSorting, wasDragging}) =>
   isSorting || wasDragging ? false : true;
 
-export function SortableTreeItem({id, depth, ...props}: Props) {
+export function SortableTreeItem({id, blockType, depth, isDisabled, ...props}: Props) {
   const {
     attributes,
     isDragging,
@@ -27,7 +29,9 @@ export function SortableTreeItem({id, depth, ...props}: Props) {
   } = useSortable({
     id,
     animateLayoutChanges,
+    disabled: isDisabled
   });
+
   const style: CSSProperties = {
     transform: CSS.Translate.toString(transform),
     transition,
@@ -35,6 +39,7 @@ export function SortableTreeItem({id, depth, ...props}: Props) {
 
   return (
     <TreeItem
+      blockType={blockType}
       ref={setDraggableNodeRef}
       wrapperRef={setDroppableNodeRef}
       style={style}

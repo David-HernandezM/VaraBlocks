@@ -39,6 +39,8 @@ import {sortableTreeKeyboardCoordinates} from './keyboardCoordinates';
 import {SortableTreeItem} from './components';
 import {CSS} from '@dnd-kit/utilities';
 import { useAppDispatch } from '@/app/hooks';
+import { removeBlock } from '@/app/SliceReducers';
+import { BlockType } from '@/app/app_types/types';
 // import { setBlocks } from '@/app/SliceReducers/VaraBlocksData/varaBlocksDataSlice';
 
 
@@ -105,8 +107,9 @@ export function SortableTree({
 
   const flattenedItems = useMemo(() => {
     const flattenedTree = flattenTree(varaBlocksState);//flattenTree(items);
-    console.log('FLATTEN TREE');
-    console.log(flattenedTree);
+
+    // console.log('FLATTEN TREE');
+    // console.log(flattenedTree);
 
     // console.log(flattenedTree[4].children[0]);
 
@@ -117,8 +120,8 @@ export function SortableTree({
         collapsed && children.length ? [...acc, id] : acc, []
     );
 
-    console.log('Collapsed iterms:');
-    console.log(collapsedItems);
+    // console.log('Collapsed iterms:');
+    // console.log(collapsedItems);
     
 
     return removeChildrenOf(
@@ -195,12 +198,12 @@ export function SortableTree({
       onDragCancel={handleDragCancel}
     >
       <SortableContext items={sortedIds} strategy={verticalListSortingStrategy}>
-        {flattenedItems.map(({id, blockType, children, collapsed, depth}) => (
+        {flattenedItems.map(({id, blockType, children, collapsed, depth, isDisabled}) => (
           <SortableTreeItem
             key={id}
             id={id}
             blockType={blockType}
-            value={id}
+            treeItemId={id}
             depth={id === activeId && projected ? projected.depth : depth}
             indentationWidth={indentationWidth}
             indicator={indicator}
@@ -210,7 +213,12 @@ export function SortableTree({
                 ? () => handleCollapse(id)
                 : undefined
             }
-            onRemove={removable ? () => handleRemove(id) : undefined}
+            onRemove={
+              blockType !== 'matcharm'
+                ? removable ? () => handleRemove(id, blockType) : undefined
+                : undefined
+            }
+            isDisabled={isDisabled}
           />
         ))}
         {createPortal(
@@ -225,7 +233,7 @@ export function SortableTree({
                 blockType={activeItem.blockType}
                 clone
                 childCount={getChildCount(varaBlocksState, activeId) + 1}//{getChildCount(items, activeId) + 1}
-                value={activeId.toString()}
+                treeItemId={activeId.toString()}
                 indentationWidth={indentationWidth}
               />
             ) : null}
@@ -281,7 +289,7 @@ export function SortableTree({
       // setItems(newItems);
       varaBlocksDispatch(setBlocks(newItems));
 
-      console.log(varaBlocksState);
+      // console.log(varaBlocksState);
       
     }
   }
@@ -299,8 +307,13 @@ export function SortableTree({
     document.body.style.setProperty('cursor', '');
   }
 
-  function handleRemove(id: UniqueIdentifier) {
+  function handleRemove(id: UniqueIdentifier, blockType: BlockType) {
     // setItems((items: TreeItems) => removeItem(items, id));
+
+    varaBlocksDispatch(removeBlock({
+      blockId: id as string,
+      blockType
+    }));
     
     const changedBlocks = removeItem(varaBlocksState, id);
 
@@ -346,6 +359,7 @@ export function SortableTree({
         // JSON.stringify(flattenTree(items))
         JSON.stringify(flattenTree(varaBlocksState))
       );
+
       const overIndex = clonedItems.findIndex(({id}) => id === overId);
       const activeIndex = clonedItems.findIndex(({id}) => id === activeId);
       const sortedItems = arrayMove(clonedItems, activeIndex, overIndex);
@@ -357,8 +371,13 @@ export function SortableTree({
       const nestedVerb = eventName === 'onDragEnd' ? 'dropped' : 'nested';
 
       if (!previousItem) {
-        const nextItem = sortedItems[overIndex + 1];
-        announcement = `${activeId} was ${movedVerb} before ${nextItem.id}.`;
+        if (sortedItems.length > 1) {
+          const nextItem = sortedItems[overIndex + 1];
+          announcement = `${activeId} was ${movedVerb} before ${nextItem.id}.`;
+        } else {
+          announcement = `No movements for ${activeId}`;
+        }
+        
       } else {
         if (projected.depth > previousItem.depth) {
           announcement = `${activeId} was ${nestedVerb} under ${previousItem.id}.`;

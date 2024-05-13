@@ -1,5 +1,5 @@
 import { ProgramMetadata } from '@gear-js/api';
-import { useApi, useAlert, TemplateAlertOptions, useAccount } from '@gear-js/react-hooks';
+import { useApi, useAlert, TemplateAlertOptions } from '@gear-js/react-hooks';
 import voucherUtils from './useVoucherUtils';
 import { gasToSpend } from '../utils';
 import { AnyJson, AnyNumber, Signer } from '@polkadot/types/types';
@@ -9,12 +9,7 @@ const useContractUtils = () => {
     const { api } = useApi();
     const alert = useAlert();
     const { 
-        voucherExists,
-        voucherExpired,
-        renewVoucherOneHour,
         accountVoucherId,
-        addOneTokenToVoucher,
-        voucherBalance,
         checkVoucherForUpdates
       } = voucherUtils();
 

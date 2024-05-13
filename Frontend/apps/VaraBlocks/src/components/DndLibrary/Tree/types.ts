@@ -1,13 +1,13 @@
 import type {MutableRefObject} from 'react';
 import type {UniqueIdentifier} from '@dnd-kit/core';
-
-export type BlockType = 'variable' | 'match' | 'loadmessage' | 'sendmessage' | 'replymessage';
+import type { BlockType } from '@/app/app_types/types';
 
 export interface TreeItem {
   id: UniqueIdentifier;
   blockType: BlockType;
   children: TreeItem[];
   collapsed?: boolean;
+  isDisabled?: boolean;
 }
 
 export type TreeItems = TreeItem[];

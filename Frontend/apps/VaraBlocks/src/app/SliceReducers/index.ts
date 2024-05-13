@@ -1,4 +1,8 @@
 export { 
+    setVirtualContractState,
+    
+    modifyMetadata,
+
     addBlockToInit,
     addBlockToHandle,
     setBlocksOnInit,
@@ -17,5 +21,24 @@ export {
     editStructAttributeName,
     editStructAttributeType,
     removeStructOfContract,
-    removeAttributeFromStruct
+    removeAttributeFromStruct,
+
+    addBlock,
+    removeBlock,
+    setBlocksTo,
+
+    modifyLoadMessageVariableName,
+    modifyLoadMessageVariableEnumName,
+
+    setSendMessageActorId,
+    modifySendMessageEnumName,
+    modifySendMessageEnumVariantName,
+
+    modifySendReplyEnumName,
+    modifySendReplyEnumVariantName
+} from "./VaraBlocksData/varaBlocksDataSlice";
+
+export type { 
+    VaraBlockEnum,
+    VaraBlockCodeBlock
 } from "./VaraBlocksData/varaBlocksDataSlice";

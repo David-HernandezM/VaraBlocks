@@ -1,0 +1,16 @@
+.send-reply-block__enum-name {
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.send-reply-block__enum-variant-name-select {
+    border-radius: 5px;
+    border: solid 1px gray;
+    min-width: 60px;
+    text-align: center;
+    padding: 3px;
+
+    & > * {
+        font-weight: 600;
+    }
+}

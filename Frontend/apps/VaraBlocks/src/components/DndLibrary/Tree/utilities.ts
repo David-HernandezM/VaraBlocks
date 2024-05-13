@@ -82,13 +82,6 @@ function flatten(
   depth = 0
 ): FlattenedItem[] {
   return items.reduce<FlattenedItem[]>((acc, item, index) => {
-    console.log('ACC');
-    console.log(acc);
-    console.log('ITEM');
-    console.log(item);
-    console.log('INDEX: ', index);
-    console.log('\n');
-    
     return [
       ...acc,
       {...item, parentId, depth, index},
@@ -170,10 +163,20 @@ export function setProperty<T extends keyof TreeItem>(
   property: T,
   setter: (value: TreeItem[T]) => TreeItem[T]
 ) {
+  console.log("metiendo propiedad");
+  
   for (const item of items) {
     if (item.id === id) {
+      console.log("Se acaba de encontrar el ID!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+      console.log(`Item id: ${item.id}`);
+      console.log("El setter: ");
+      console.log(setter(item[property]));
+      
       item[property] = setter(item[property]);
       continue;
+    } else {
+      console.log("no es el id");
+      
     }
 
     if (item.children.length) {
@@ -205,9 +208,6 @@ export function removeChildrenOf(
   ids: UniqueIdentifier[]
 ) {
   const excludeParentIds = [...ids];
-
-  console.log('IDS A EXCLUIR');
-  console.log(excludeParentIds);
 
   return items.filter((item) => {
     if (item.parentId && excludeParentIds.includes(item.parentId)) {

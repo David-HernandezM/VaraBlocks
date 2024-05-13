@@ -4,3 +4,8 @@ export { VirtualContractEnumsContainer } from "./VirtualContractEnumsContainer/V
 export { VirtualContractStructsContainer } from "./VirtualContractStructsContainer/VirtualContractStructsContainer";
 export { VirtualContractData } from "./VirtualContractData/VirtualContractData";
 export { VirtualContractMessageHandler } from "./VirtualContractMessageHandler/VirtualContractMessageHandler";
+export { LoadMessageBlock } from "./LoadMessageBlock/LoadMessageBlock";
+export { SendMessageBlock } from "./SendMessageBlock/SendMessageBlock";
+export { SendReplyBlock } from "./SendReplyBlock/SendReplyBlock";
+export { MatchBlock } from "./MatchBlock/MatchBlock";
+export { MatchArmBlock } from "./MatchArmBlock/MatchArmBlock";

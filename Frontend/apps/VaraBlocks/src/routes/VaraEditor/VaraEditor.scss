@@ -2,11 +2,16 @@
     width: 100vw;
     height: 63rem;
 
-    outline: solid 2px green;
-
     & > * {
         width: 100%;
     }
+}
+
+.varaeditor__edition-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 10px;
 }
 
 .varaeditor__edition-options {
@@ -53,7 +58,7 @@
 
 
 .varaeditor__container {
-    height: 59.7rem;
+    height: 59.6rem;
 
     & > * {
         height: 100%;
@@ -109,13 +114,13 @@
     flex: 1;
     padding: 20px;
     width: 100%;
-    overflow-x: auto;
 }
 
 .varaeditor__structs-editor {
     display: flex;
     flex-wrap: wrap;
-    align-content:flex-start;
+    align-content: flex-start;
+    overflow-x: auto;
     gap: 20px;
     padding: 10px 20px 20px 40px;
 }
@@ -127,4 +132,8 @@
     gap: 20px;
     padding: 10px 20px 20px 20px;
     overflow-y: auto;
+}
+
+.varaeditor__virtual-contract-data {
+    display: flex;
 }

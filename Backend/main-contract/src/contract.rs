@@ -86,13 +86,22 @@ extern "C" fn handle() {
                         .for_each(|message| {
                             state.messages_of_virtual_contracts
                                 .entry(message.to)
-                                .and_modify(|messages| messages.push(message.message.clone()))
-                                .or_insert(vec![message.message]);
+                                .and_modify(|messages| messages.push(VirtualContractMesssage::Message(message.message.clone())))
+                                .or_insert(vec![VirtualContractMesssage::Message(message.message)]);
                         });
 
                     message_of_contract
                 },
-                Err(message_error) => message_error
+                Err(message_error) => {
+                    if let VirtualContractMessage::Error(ref error) = message_error {
+                        state.messages_of_virtual_contracts
+                            .entry(caller)
+                            .and_modify(|messages| messages.push(VirtualContractMesssage::Error(error.clone())))
+                            .or_insert(vec![VirtualContractMesssage::Error(error.clone())]);
+                    };
+
+                    message_error
+                }
             };
 
             msg::reply(ContractEvent::MessageOfInterpreter(message_to_send), 0)

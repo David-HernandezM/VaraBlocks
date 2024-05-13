@@ -2,9 +2,16 @@ import React, {forwardRef, HTMLAttributes} from 'react';
 import classNames from 'classnames';
 
 import {Action, Handle, Remove} from '../../../components';
-import { BlockType } from '../../types';
-import styles from './TreeItem.module.css';
+import { BlockType } from '@/app/app_types/types'; 
 import { UniqueIdentifier } from '@dnd-kit/core';
+import { 
+  LoadMessageBlock,
+  SendReplyBlock,
+  SendMessageBlock,
+  MatchBlock,
+  MatchArmBlock
+} from '@/components/VirtualContractComponents';
+import styles from './TreeItem.module.css';
 
 export interface Props extends Omit<HTMLAttributes<HTMLLIElement>, 'id'> {
   childCount?: number;
@@ -17,7 +24,7 @@ export interface Props extends Omit<HTMLAttributes<HTMLLIElement>, 'id'> {
   handleProps?: any;
   indicator?: boolean;
   indentationWidth: number;
-  value: UniqueIdentifier;
+  treeItemId: UniqueIdentifier;
   blockType: BlockType,
   onCollapse?(): void;
   onRemove?(): void;
@@ -27,6 +34,8 @@ export interface Props extends Omit<HTMLAttributes<HTMLLIElement>, 'id'> {
 export const TreeItem = forwardRef<HTMLDivElement, Props>(
   (
     {
+      blockType,
+      treeItemId,
       childCount,
       clone,
       depth,
@@ -40,12 +49,37 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
       onCollapse,
       onRemove,
       style,
-      value,
       wrapperRef,
       ...props
     },
     ref
   ) => {
+    // const x = useAppSelector((state) => {
+    //   return state.VaraBlocksData.loadMessages;
+    // });
+    // const y = useAppSelector((state) => state.VaraBlocksData.handleBlocks);
+
+    // console.log(x);
+    // console.log(y);
+
+    const blockComponent = (blockType: BlockType): JSX.Element | null => {
+      switch (blockType) {
+        case 'loadmessage':
+          return <LoadMessageBlock loadMessageId={treeItemId as string} />
+        case 'replymessage':
+          return <SendReplyBlock sendReplyBlockId={treeItemId as string} />
+        case 'sendmessage':
+          return <SendMessageBlock sendMessageBlockId={treeItemId as string} />
+        case 'match':
+          return <MatchBlock matchBlockId={treeItemId as string}/>;
+        case 'matcharm':
+          return <MatchArmBlock matchArmBlockId={treeItemId as string} />;
+        default: 
+          return null;
+      }
+    }
+    
+    
     return (
       <li
         className={classNames(
@@ -78,16 +112,13 @@ export const TreeItem = forwardRef<HTMLDivElement, Props>(
               {collapseIcon}
             </Action>
           )}
-          {/* <p>hola</p>
-          <label htmlFor="cars">Choose a car:</label>
 
-          <select id="cars">
-            <option value="volvo">Volvo</option>
-            <option value="saab">Saab</option>
-            <option value="opel">Opel</option>
-            <option value="audi">Audi</option>
-          </select> */}
-          <span className={styles.Text}>{value}</span>
+          
+          {
+            blockComponent(blockType)
+          }
+          
+          {/* <span className={styles.Text}>{value}</span> */}
           {!clone && onRemove && <Remove onClick={onRemove} />}
           {clone && childCount && childCount > 1 ? (
             <span className={styles.Count}>{childCount}</span>
