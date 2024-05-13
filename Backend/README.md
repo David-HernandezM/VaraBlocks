@@ -1,1 +1,1 @@
-# Contract for Rutzo
+# Contracts for VaraBlocks
