@@ -6,10 +6,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { 
   Root, 
   ErrorPage,
-  Index,
-  Account,
-  XorDemoNN,
-  DoodleDemoNN,
+  // Index,
   VaraEditor
 } from './routes';
 
@@ -31,24 +28,16 @@ function Component() {
           children: [
             {
               index: true,
-              element: <Index />
+              element: <VaraEditor /> //<Index />
             },
             {
               path: "account",
-              element: <Account />,
+              element: <p>Acount</p> //<Account />,
             },
             {
               path: "account/varaeditor",
               element: <VaraEditor />,
             },
-            {
-              path: 'account/xor-demo-nn',
-              element: <XorDemoNN />
-            },
-            {
-              path: 'account/doodle-demo-nn',
-              element: <DoodleDemoNN />
-            }
           ]
         }
       ]

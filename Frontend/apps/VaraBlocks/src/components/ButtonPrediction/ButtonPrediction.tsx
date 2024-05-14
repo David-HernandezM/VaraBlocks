@@ -1,4 +1,4 @@
-import { SUBSCRIPTIONS_CONTRACT } from '@/app/consts';
+// import { SUBSCRIPTIONS_CONTRACT } from '@/app/consts';
 import { useAlert, useAccount, useApi } from '@gear-js/react-hooks';
 import { useVoucherUtils, useContractUtils } from '@/app/hooks';
 import { useGearHooks } from '@/routes/root';

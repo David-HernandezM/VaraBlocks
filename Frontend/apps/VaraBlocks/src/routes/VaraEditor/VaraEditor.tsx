@@ -591,12 +591,12 @@ export default function VaraEditor() {
                                     }}>
                                         Send Reply
                                     </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
+                                    {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
                                         console.log("Agregar variable");
                                     }}>
                                         Change state
-                                    </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
+                                    </Button> */}
+                                    {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
                                         const blockId = generatePassword();
 
                                         const blockToSave: TreeItem = {
@@ -632,7 +632,7 @@ export default function VaraEditor() {
                                         console.log("Agregar variable");
                                     }}>
                                         Add variable
-                                    </Button>
+                                    </Button> */}
                                     <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
                                         const loadMessagesBlocksData = Object.entries(loadMessageBlocks);
                                         const variablesBlocksData = Object.entries(variableBlocks);
@@ -714,7 +714,7 @@ export default function VaraEditor() {
                                     }}>
                                         Add match
                                     </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
+                                    {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
                                         console.log("Checando state");
                                         console.log('Load Message Block');
                                         console.log(loadMessageBlocks);
@@ -730,7 +730,7 @@ export default function VaraEditor() {
                                         console.log(handleBlocks);
                                     }}>
                                         Check state
-                                    </Button>
+                                    </Button> */}
                                 </div>
                                 {
                                     initCodeEditionOpen && <div className="varaeditor__contract-editor-logic--sketch">

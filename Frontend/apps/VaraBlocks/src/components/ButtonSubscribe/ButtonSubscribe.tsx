@@ -1,4 +1,4 @@
-import { SUBSCRIPTIONS_CONTRACT } from '@/app/consts';
+// import { SUBSCRIPTIONS_CONTRACT } from '@/app/consts';
 import { useAlert, useAccount, useApi } from '@gear-js/react-hooks';
 import { useVoucherUtils, useContractUtils, useSignlessUtils } from '@/app/hooks';
 import { useGearHooks } from '@/routes/root';
@@ -19,9 +19,9 @@ export function ButtonSubscribe({ cost, onSubscribe, available }: ButtonSubscrib
   const { account } = useAccount();
   const { generateNewVoucher, accountVoucherId, voucherExists, checkVoucherForUpdates } = useVoucherUtils();
   const { sendMessageWithVoucher, signMessageTransaction } = useContractUtils();
-  const {
-    createAndSaveAccountNewPair
-  } = useSignlessUtils()
+  // const {
+  //   createAndSaveAccountNewPair
+  // } = useSignlessUtils()
 
   const signSubscriptionTransaction = async () => {
     if (!account) {
@@ -29,9 +29,9 @@ export function ButtonSubscribe({ cost, onSubscribe, available }: ButtonSubscrib
       return;
     }
 
-    const voucherId = await accountVoucherId(SUBSCRIPTIONS_CONTRACT.programId, account.decodedAddress);
+    // const voucherId = await accountVoucherId(SUBSCRIPTIONS_CONTRACT.programId, account.decodedAddress);
 
-    await checkVoucherForUpdates(voucherId as `0x${string}`, account.decodedAddress);
+    // await checkVoucherForUpdates(voucherId as `0x${string}`, account.decodedAddress);
 
     let price = 0;
     let payload = null;
@@ -47,18 +47,18 @@ export function ButtonSubscribe({ cost, onSubscribe, available }: ButtonSubscrib
     }
 
     try {
-      await sendMessageWithVoucher(
-        account.decodedAddress,
-        account.meta.source,
-        SUBSCRIPTIONS_CONTRACT.programId,
-        ProgramMetadata.from(SUBSCRIPTIONS_CONTRACT.programMetadata),
-        payload,
-        price,
-        'Finalized',
-        'Error when subscribing',
-        'Subscribing',
-        'NeuroShark: ',
-      );
+      // await sendMessageWithVoucher(
+      //   account.decodedAddress,
+      //   account.meta.source,
+      //   SUBSCRIPTIONS_CONTRACT.programId,
+      //   ProgramMetadata.from(SUBSCRIPTIONS_CONTRACT.programMetadata),
+      //   payload,
+      //   price,
+      //   'Finalized',
+      //   'Error when subscribing',
+      //   'Subscribing',
+      //   'NeuroShark: ',
+      // );
 
       console.log("SE TERMINO EL PDO DE SUBSCRIBIRSE, AHORA SE MANDARA QUE YA SE FIRMO!");
       
@@ -79,25 +79,25 @@ export function ButtonSubscribe({ cost, onSubscribe, available }: ButtonSubscrib
     }
 
     // Se crea la cuenta signless
-    await createAndSaveAccountNewPair(
-      "123123"
-    );  
+    // await createAndSaveAccountNewPair(
+    //   "123123"
+    // );  
 
     return;
     
 
-    if (await voucherExists(SUBSCRIPTIONS_CONTRACT.programId, account.decodedAddress)) {
-      console.log('Voucher exists');
-      await signSubscriptionTransaction();
-      return;
-    }
+    // if (await voucherExists(SUBSCRIPTIONS_CONTRACT.programId, account.decodedAddress)) {
+    //   console.log('Voucher exists');
+    //   await signSubscriptionTransaction();
+    //   return;
+    // }
 
-    await generateNewVoucher(
-      SUBSCRIPTIONS_CONTRACT.programId, 
-      decodeAddress(account.address)
-    );
+    // await generateNewVoucher(
+    //   SUBSCRIPTIONS_CONTRACT.programId, 
+    //   decodeAddress(account.address)
+    // );
 
-    await signSubscriptionTransaction();
+    // await signSubscriptionTransaction();
   };
 
   return (

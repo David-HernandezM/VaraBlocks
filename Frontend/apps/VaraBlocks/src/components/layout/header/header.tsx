@@ -16,7 +16,7 @@ export function Header({ isAccountVisible }: Props) {
       <Logo />
       <div className='header__container'>
         <nav className='header__nav'>
-          <ul className='header__nav-ul'>
+          {/* <ul className='header__nav-ul'>
             <li className='header__nav-ul-li'>
               <Link to="about">About</Link>
             </li>
@@ -29,7 +29,7 @@ export function Header({ isAccountVisible }: Props) {
             <li className='header__nav-ul-li'>
               <Link to="/account">Accunt</Link>
             </li>
-          </ul>
+          </ul> */}
         </nav>
       
         {isAccountVisible && <AccountInfo />}
