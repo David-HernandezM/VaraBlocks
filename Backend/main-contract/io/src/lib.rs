@@ -48,12 +48,65 @@ impl Metadata for ProgramMetadata {
     type State = InOut<ContractStateQuery, ContractStateReply>;
 }
 
-pub struct Contract {
+pub struct ContractState {
     pub owner: ActorId,
     pub virtual_contracts: BTreeMap<ActorId, VirtualContract>,
+    pub signless_accounts_by_owner: BTreeMap<ActorId, ActorId>,
+    pub signless_accounts: BTreeMap<ActorId, SignlessAccount>,
     pub messages_of_virtual_contracts: BTreeMap<ActorId, Vec<VirtualContractMesssage>>,
     pub reservations: Vec<ReservationId>
 }
+
+impl ContractState {
+    pub fn set_vc_to_address(&mut self, address: ActorId, virtual_contract: VirtualContract) {
+        if self.virtual_contracts.contains_key(&address) {
+            self.virtual_contracts
+                .entry(address)
+                .and_modify(|actual_virtual_contract| *actual_virtual_contract = virtual_contract);
+        } else {
+            self.virtual_contracts
+                .insert(address, virtual_contract);
+        }
+    }
+
+    pub fn set_signless_account_to_address(&mut self, user_address: ActorId, signless_account: SignlessAccount) {
+        let caller = msg::source();
+
+        self.signless_accounts
+            .entry(caller)
+            .and_modify(|current_signless_account| *current_signless_account = signless_account.clone())
+            .or_insert(signless_account);
+    
+        self.signless_accounts_by_owner
+            .entry(user_address)
+            .and_modify(|current_signless_address| *current_signless_address = caller)
+            .or_insert(caller);
+    }
+
+    pub fn get_user_address(&self, user_address: Option<ActorId>) -> Result<ActorId, ContractEvent> {
+        let caller = msg::source();
+
+        let address = match user_address {
+            Some(address) => {
+                let signless_account = self
+                    .signless_accounts_by_owner
+                    .get(&address)
+                    .ok_or(ContractEvent::SignlessAccountHasInvalidSession)?;
+
+                if *signless_account != caller {
+                    return Err(ContractEvent::SignlessAccountNotApproved);
+                }
+
+                address
+            },
+            None => caller
+        };
+
+        Ok(address)
+    }
+}
+
+
 
 #[derive(Encode, Decode, TypeInfo, Clone)]
 #[codec(crate = gstd::codec)]
@@ -67,11 +120,47 @@ pub enum VirtualContractMesssage {
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
 pub enum ContractAction {
-    SetVirtualContract(VirtualContractData),
-    SetDefaultVirtualContract,
-    SendMessageToVirtualContract(EnumVal),
-    MakeReservation
+    SetVirtualContract {
+        user_account: Option<ActorId>,
+        virtual_contract: VirtualContractData
+    },
+    SetDefaultVirtualContract {
+        user_account: Option<ActorId>,
+    },
+    SendMessageToVirtualContract {
+        user_account: Option<ActorId>,
+        message: EnumVal
+    },
+    BindSignlessAddressToAddress {
+        user_account: ActorId,
+        signless_data: SignlessAccount
+    },
+    MakeReservation,
+    deleteAllSignlessAccounts
 }
+
+
+impl ContractAction {
+    pub fn signless_account_owner(&self) -> Option<ActorId> {
+        match self {
+            ContractAction::BindSignlessAddressToAddress { user_account, .. } => Some(*user_account),
+            ContractAction::SendMessageToVirtualContract { user_account, .. } => *user_account,
+            ContractAction::SetDefaultVirtualContract { user_account } => *user_account,
+            ContractAction::SetVirtualContract { user_account, .. } => *user_account,
+            _ => None
+        }
+    }
+}
+
+// #[derive(Encode, Decode, TypeInfo)]
+// #[codec(crate = gstd::codec)]
+// #[scale_info(crate = gstd::scale_info)]
+// pub enum ContractAction {
+//     SetVirtualContract(VirtualContractData),
+//     SetDefaultVirtualContract,
+//     SendMessageToVirtualContract(EnumVal),
+//     MakeReservation
+// }
 
 #[derive(Encode, Decode, TypeInfo)]
 #[codec(crate = gstd::codec)]
@@ -82,7 +171,11 @@ pub enum ContractEvent {
     VirtualContractSet,
     NoVirtualContractStored,
     ReservationMade,
-    NoReservationIdInContract
+    NoReservationIdInContract,
+    SignlessAccountSet,
+    AllSignlessAccountDeleted, // Temp
+    SignlessAccountHasInvalidSession,
+    SignlessAccountNotApproved
 }
 
 #[derive(Encode, Decode, TypeInfo)]
@@ -92,7 +185,9 @@ pub enum ContractStateQuery {
     VirtualContract(ActorId),
     VirtualContractMetadata(ActorId),
     VirtualContractState(ActorId),
-    MessagesFromVirtualContract(ActorId)
+    MessagesFromVirtualContract(ActorId),
+    AddressSignlessAccountForAddress(ActorId),
+    SignlessAccountData(ActorId)
 }
 
 #[derive(Encode, Decode, TypeInfo)]
@@ -103,5 +198,35 @@ pub enum ContractStateReply {
     VirtualContractMetadata(VirtualContractMetadata),
     VirtualContractState(Option<ContractStructFormat>),
     MessagesFromVirtualContract(Vec<VirtualContractMesssage>),
-    AddresDoesNotHaveVirtualContract(ActorId)
+    AddresDoesNotHaveVirtualContract(ActorId),
+    AddressSignlessAccountForAddress(Option<ActorId>),
+    SignlessAccountData(Option<SignlessAccount>)
 }
+
+
+#[derive(Encode, Decode, TypeInfo, Clone)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub struct SignlessAccount {
+    address: String,
+    encoded: String,
+    encoding: SignlessEncodingData,
+    meta: SignlessMetaData
+}
+
+#[derive(Encode, Decode, TypeInfo, Clone)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub struct SignlessEncodingData {
+    content: (String, String),
+    encoding_type: (String, String),
+    version: String
+}
+
+#[derive(Encode, Decode, TypeInfo, Clone)]
+#[codec(crate = gstd::codec)]
+#[scale_info(crate = gstd::scale_info)]
+pub struct SignlessMetaData {
+    name: String
+}
+

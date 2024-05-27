@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { 
     VirtualContractEnum, 
     VirtualContractStruct, 
-    VirtualContractData,
+    VirtualContractMetadataFields,
     VirtualContractMessageHandler
 } from "@/components";
 import { 
@@ -12,7 +12,7 @@ import {
     firstVariantFromEnumI,
     enumDataByName
 } from "@/app/utils"; 
-import { useAppDispatch, useAppSelector, useContractUtils } from "@/app/hooks";
+import { useAppDispatch, useAppSelector, useContractUtils, useSignlessUtils } from "@/app/hooks";
 import { 
     addEnumToContract, 
     addStructToContract,
@@ -21,7 +21,8 @@ import {
     addBlock,
     removeBlock,
     VaraBlockEnum,
-    
+    setSignlessAccount,
+    removeSignlessAccount
 } from "@/app/SliceReducers";
 import {  
     ContractEnumInterface, 
@@ -42,6 +43,7 @@ import {
     StructName,
     StructAttribute
 } from '@/app/app_types/types';
+import { KeyringPair } from '@polkadot/keyring/types';
 
 
 
@@ -52,17 +54,27 @@ import { useAccount, useAlert } from "@gear-js/react-hooks";
 import "./VaraEditor.scss";
 import { VaraBlockStruct } from "@/app/SliceReducers/VaraBlocksData/varaBlocksDataSlice";
 import { MAIN_CONTRACT } from "@/app/consts";
-import { ProgramMetadata } from "@gear-js/api";
+import { ProgramMetadata, decodeAddress } from "@gear-js/api";
+import { IKeyringPair } from "@polkadot/types/types";
 // import { MAIN_CONTRACT } from "@/app/consts";
 
 
+
 export default function VaraEditor() {
-    const account = useAccount()
+    const account = useAccount();
     const alert = useAlert();
     const {
-        sendMessage
+        sendMessage,
+        sendMessageWithSignlessAccount,
+        readState,
     } = useContractUtils();
-    // const contractState = useAppSelector((state) => )
+    const {
+        signlessDataFromActualAccount,
+        signlessDataFromContract,
+        createAndSaveAccountNewPair,
+        signlessActualAccountFromLocalStorage,
+        unlockActualPair,
+    } = useSignlessUtils();
 
 
     const initBlocks = useAppSelector((state) => state.VaraBlocksData.initBlocks);
@@ -92,12 +104,18 @@ export default function VaraEditor() {
     const [virtualContractDataOpen, setVirtualContractDataOpen] = useState(false);
     const [initCodeEditionOpen, setInitCodeEditionOpen] = useState(true);
     const [handleCodeEditionOpen, setHandleCodeEditionOpen] = useState(false);
+
+
+
+
+    const [signlessAccountData, setSignlessAccountData] = useState<KeyringPair | null>(null);
+
+
+
+
     // const [accountHasVirtualContract, setAccountHasVirtualContract] = useState(false);
     // const [virtualContractState, setVirtualContractState] = useState<ContractStruct | null>(null);
     // const [virtualContractMetadata, setVirtualContractMetadata] = useState<VirtualContractMetadata>();
-    const {
-        readState
-    } = useContractUtils();
 
     const configEditionButtonsPressed = (btn1: boolean, btn2: boolean, btn3: boolean, btn4: boolean) => {
         setContractEditorOpen(btn1);
@@ -110,6 +128,9 @@ export default function VaraEditor() {
         setInitCodeEditionOpen(initButton);
         setHandleCodeEditionOpen(handleButton);
     }
+
+
+    
 
 
     const treeItemsToCodeBlocks = (treeItems: TreeItems, parent: BlockType): Result<CodeBlock[], string >=> {
@@ -130,13 +151,8 @@ export default function VaraEditor() {
                     const loadMessageBlockData =(loadMessageBlocks[treeItem.id] as { LoadMessageI: { data: Variable, loadInInit: boolean } }).LoadMessageI;
 
                     if (loadMessageBlockData.data.variableName.trim() === '') {
-                        console.log("ENTRROOOOOO");
-                        
                         return { ok: false, error: 'Load message block variable cant be empty' };
                     }
-
-                    console.log("SALIOOOOOOOOO");
-                    
 
                     const loadMessageBlockFormat: CodeBlock = { 
                         LoadMessage: loadMessageBlockData.data
@@ -278,6 +294,12 @@ export default function VaraEditor() {
     }
 
 
+    useEffect(() => {
+        setSignlessAccountData(null);
+    }, [account])
+    
+
+
     return (
         <div className="varaeditor">
             <div className="varaeditor__edition-buttons">
@@ -304,7 +326,7 @@ export default function VaraEditor() {
                         className={virtualContractDataOpen ? "varaeditor__edition-options--selected" : ""}
                         onClick={() => configEditionButtonsPressed(false, false, false, true)}
                     >
-                        Virtual Contract Data
+                        Metadata editor
                     </li>
                 </ul>
                 <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
@@ -342,18 +364,28 @@ export default function VaraEditor() {
                         enums,
                         structs
                     };
-                    
-                    
 
-                    console.log(virtualContract);
+                    let signlessAccount;
+
+                    if (!signlessAccountData) {
+                        signlessAccount = await signlessDataFromActualAccount();
+                        setSignlessAccountData(signlessAccount);
+                    } else signlessAccount = signlessAccountData;
+
+                    console.log('Imprimiendo la cuenta signless!!');
+                    console.log(signlessAccount);
                     
-                    await sendMessage(
-                        account.account.decodedAddress,
-                        account.account.meta.source,
+                    console.log("sending message!");
+
+                    await sendMessageWithSignlessAccount(
+                        signlessAccount,
                         MAIN_CONTRACT.programId,
                         ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
                         {
-                          SetVirtualContract: virtualContract
+                          SetVirtualContract: {
+                            userAccount: account.account.decodedAddress,
+                            virtualContract
+                          }
                         },
                         0,
                         "Virtual Contract set!",
@@ -361,7 +393,6 @@ export default function VaraEditor() {
                         "Sending virtual contract...",
                         "VaraBlocks action:"
                     );
-                    
                 }}>
                     Send Virtual Contract
                 </Button>
@@ -714,23 +745,95 @@ export default function VaraEditor() {
                                     }}>
                                         Add match
                                     </Button>
-                                    {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        console.log("Checando state");
-                                        console.log('Load Message Block');
-                                        console.log(loadMessageBlocks);
-                                        console.log('Send message block');
-                                        console.log(sendMessagesBlocks);
-                                        console.log('Send reply message block');
-                                        console.log(replymessageBlocks);
-                                        console.log('Match blocks');
-                                        console.log(matchBlocks);
-                                        console.log('Init blocks');
-                                        console.log(initBlocks);
-                                        console.log('Handle Blocks');
-                                        console.log(handleBlocks);
+                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
+                                        // console.log("Checando state");
+                                        // console.log('Load Message Block');
+                                        // console.log(loadMessageBlocks);
+                                        // console.log('Send message block');
+                                        // console.log(sendMessagesBlocks);
+                                        // console.log('Send reply message block');
+                                        // console.log(replymessageBlocks);
+                                        // console.log('Match blocks');
+                                        // console.log(matchBlocks);
+                                        // console.log('Init blocks');
+                                        // console.log(initBlocks);
+                                        // console.log('Handle Blocks');
+                                        // console.log(handleBlocks);
+
+
+
+
+                                        createAndSaveAccountNewPair(
+                                            "123123"
+                                        );
+
+                                        // saveAccountPairToLocalStorage(undefined);
+
+
+                                        // const x = signlessActualAccountFromLocalStorage();
+
+                                        // if (!x && x !== undefined) {
+                                        //     console.log(x);
+                                        //     deleteSignlessAcctountFromLocalStorage();
+                                        //     console.log('Signless acctount deleted!');
+                                        // } else {
+                                        //     console.log('Cuenta no tiene signles account!!');
+                                        //     console.log(signlessAccountsFromLocalStorage());
+                                        // }
                                     }}>
                                         Check state
-                                    </Button> */}
+                                    </Button> 
+                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
+                                        console.log('Signless account stored on page:');
+                                        console.log(signlessAccountData);
+
+                                        console.log('CUENTA signless de contrato:');
+                                        await signlessDataFromContract();
+
+                                        const signlessActualAccount = signlessActualAccountFromLocalStorage();
+                                        console.log(signlessActualAccount);
+
+                                        console.log(unlockActualPair("123123"));
+                                        
+                                        console.log('');
+                                        
+                                    }}>
+                                        Info
+                                    </Button>
+                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
+                                        setSignlessAccountData(null);
+                                        console.log("DELETED!!!");
+                                    }}>
+                                        delete signless account from page
+                                    </Button>
+                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={ async () => {
+                                        localStorage.setItem("signless", "{}");
+
+                                        if (!account.account) {
+                                            console.log("Account not ready");
+                                            return;
+                                        }
+
+                                        await sendMessage(
+                                            account.account.decodedAddress,
+                                            account.account.meta.source,
+                                            MAIN_CONTRACT.programId,
+                                            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+                                            {
+                                                DeleteAllSignlessAccounts: null
+                                            },
+                                            0,
+                                            "All signless accounts deleted!",
+                                            "Erron while deleting all signless",
+                                            "Deleting all signless account",
+                                            "VaraBlocks:"
+                                        );
+
+                                        console.log('SE BORRARON TODAS LAS CUENTAS SIGNLESS!');
+                                        
+                                    }}>
+                                        delete signless in local storage.
+                                    </Button>
                                 </div>
                                 {
                                     initCodeEditionOpen && <div className="varaeditor__contract-editor-logic--sketch">
@@ -787,70 +890,11 @@ export default function VaraEditor() {
                 {
                     virtualContractDataOpen &&
                     <div className="varaeditor__virtual-contract-data">
-                        <VirtualContractData />
-                        <VirtualContractMessageHandler />
+                        <VirtualContractMetadataFields />
+                        <VirtualContractMessageHandler signlessData={signlessAccountData} />
                     </div>
                 }
             </div>
         </div>
     );
 }
-
-
-
-
-
-    /*
-    useEffect(() => {
-        (
-            async function() {
-                if (!account) return;
-
-                const contractVirtualState = await readState(
-                    MAIN_CONTRACT.programId,
-                    MAIN_CONTRACT.programMetadata,
-                    {
-                        VirtualContractState: account.account?.decodedAddress
-                    }
-                );
-    
-                if (Object.keys(contractVirtualState as {})[0] !== "addresDoesNotHaveVirtualContract") {
-                    // const { attributes, structName } = virtualContractState;
-                    const { virtualContractState }: any = contractVirtualState;
-                    console.log(virtualContractState);
-    
-                    if (virtualContractState) {
-                        const virtualContractStateStruct = virtualContractState as ContractStruct;
-    
-                        setVirtualContractState(virtualContractStateStruct);
-                        setAccountHasVirtualContract(true);
-                    } else {
-                        setVirtualContractState(null);
-                    }
-    
-                    
-                } else {
-                    setAccountHasVirtualContract(false);
-                    console.log('La cuenta no tiene un contrato virtual!');
-                    return;
-                }    
-
-                const contractVirtualMetadata = await readState(
-                    MAIN_CONTRACT.programId,
-                    MAIN_CONTRACT.programMetadata,
-                    {
-                        VirtualContractMetadata: account.account?.decodedAddress
-                    }
-                );
-
-                const { virtualContractMetadata }: any = contractVirtualMetadata;
-
-                console.log(virtualContractMetadata);
-
-                setVirtualContractMetadata(virtualContractMetadata as VirtualContractMetadata);
-            }
-        )();
-    }, [account]);
-    */
-
-    

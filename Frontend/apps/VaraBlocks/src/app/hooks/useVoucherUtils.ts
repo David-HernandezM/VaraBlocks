@@ -21,6 +21,9 @@ const useVoucherUtils = () => {
 
       const totalVoucherBalance = await voucherBalance(voucherId);
 
+      console.log('TOTAL BALANCEEEEEE: ', totalVoucherBalance);
+      
+
       if (totalVoucherBalance < VOUCHER_MIN_LIMIT) {
         await addOneTokenToVoucher(voucherId,account);
       }
@@ -39,8 +42,8 @@ const useVoucherUtils = () => {
 
       const voucherIssued = await api.voucher.issue(
         account,
-        ONE_TVARA_VALUE * 11, // 11 TVaras
-        api.voucher.minDuration, // 1_200, // An hour in blocks
+        ONE_TVARA_VALUE * 3, // 3 TVaras
+        1_200, // An hour in blocks
         [program_id],
       );
 
@@ -50,7 +53,7 @@ const useVoucherUtils = () => {
             "Voucher created",
             "Error creating voucher",
             "Creating voucher",
-            "NeuroShark:"
+            "VaraBlocks:"
           );
         resolve(voucherIssued.voucherId);
       } catch (e) {
@@ -146,7 +149,7 @@ const useVoucherUtils = () => {
             "Voucher updated",
             "Error renewing voucher",
             "Renewing voucher",
-            "NeuroShark: "
+            "VaraBlocks: "
         );
       } catch (e) {
         console.log("Error during sign transaction");
@@ -175,7 +178,7 @@ const useVoucherUtils = () => {
             "Voucher updated",
             "Error while adding tokens to voucher",
             "Adding tokens to voucher",
-            "NeuroShark"
+            "VaraBlocks: "
         )
       } catch (e) {
         console.log("Error while sign transaction");

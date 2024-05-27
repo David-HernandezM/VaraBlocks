@@ -6,7 +6,7 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import { 
   Root, 
   ErrorPage,
-  // Index,
+  Index,
   VaraEditor
 } from './routes';
 
@@ -28,7 +28,7 @@ function Component() {
           children: [
             {
               index: true,
-              element: <VaraEditor /> //<Index />
+              element: <VaraEditor />,//<Index />
             },
             {
               path: "account",

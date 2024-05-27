@@ -13,17 +13,19 @@ use main_contract_io::virtual_contract_state_handlers::{
 };
 use main_contract_io::*;
 
-static mut CONTRACT: Option<Contract> = None;
+static mut CONTRACT: Option<ContractState> = None;
 
 #[no_mangle]
 extern "C" fn intit() {
     unsafe {
         CONTRACT = Some(
-            Contract {
+            ContractState {
                 owner: msg::source(),
                 virtual_contracts: BTreeMap::new(),
                 messages_of_virtual_contracts: BTreeMap::new(),
-                reservations: Vec::new()
+                reservations: Vec::new(),
+                signless_accounts: BTreeMap::new(),
+                signless_accounts_by_owner: BTreeMap::new()
             }
         );
     }
@@ -33,12 +35,20 @@ extern "C" fn intit() {
 extern "C" fn handle() {
     let message = msg::load()
         .expect("Error loading message");
-    let caller = msg::source();
+    // let caller = msg::source();
     let state = state_mut();
     
 
     match message {
-        ContractAction::SetVirtualContract(virtual_contract) => {
+        ContractAction::SetVirtualContract { virtual_contract, user_account } => {
+            let caller = match state.get_user_address(user_account) {
+                Ok(address) => address,
+                Err(error) => {
+                    msg::reply(error, 0).expect("Error sending reply");
+                    return;
+                }
+            };
+
             if state.virtual_contracts.contains_key(&caller) {
                 state.virtual_contracts
                     .entry(caller)
@@ -51,7 +61,15 @@ extern "C" fn handle() {
             msg::reply(ContractEvent::VirtualContractSet, 0)
                 .expect("Error sending reply");
         },
-        ContractAction::SetDefaultVirtualContract => {
+        ContractAction::SetDefaultVirtualContract { user_account } => {
+            let caller = match state.get_user_address(user_account) {
+                Ok(address) => address,
+                Err(error) => {
+                    msg::reply(error, 0).expect("Error sending reply");
+                    return;
+                }
+            };
+
             if state.virtual_contracts.contains_key(&caller) {
                 state.virtual_contracts
                     .entry(caller)
@@ -64,7 +82,15 @@ extern "C" fn handle() {
             msg::reply(ContractEvent::VirtualContractSet, 0)
                 .expect("Error sending reply");
         },
-        ContractAction::SendMessageToVirtualContract(message_to_virtual_contract) => {
+        ContractAction::SendMessageToVirtualContract { message, user_account } => {
+            let caller = match state.get_user_address(user_account) {
+                Ok(address) => address,
+                Err(error) => {
+                    msg::reply(error, 0).expect("Error sending reply");
+                    return;
+                }
+            };
+            
             if !state.virtual_contracts.contains_key(&caller) {
                 msg::reply(ContractEvent::NoVirtualContractStored, 0)
                     .expect("Error sending reply");
@@ -74,7 +100,7 @@ extern "C" fn handle() {
             let contract_process_result = state.virtual_contracts
                 .get_mut(&caller)
                 .unwrap()
-                .handle_message(message_to_virtual_contract);
+                .handle_message(message, caller);
                 
             
             let message_to_send = match contract_process_result {
@@ -115,6 +141,19 @@ extern "C" fn handle() {
             state.reservations.push(reservation_id);
 
             msg::reply(ContractEvent::ReservationMade, 0)
+                .expect("Error sending reply");
+        },
+        ContractAction::BindSignlessAddressToAddress { user_account, signless_data } => {
+            state.set_signless_account_to_address(user_account, signless_data);  
+
+            msg::reply(ContractEvent::SignlessAccountSet, 0) 
+                .expect("Error sending reply");
+        },
+        ContractAction::deleteAllSignlessAccounts => {
+            state.signless_accounts.clear();
+            state.signless_accounts_by_owner.clear();
+
+            msg::reply(ContractEvent::AllSignlessAccountDeleted, 0) 
                 .expect("Error sending reply");
         }
     }
@@ -194,17 +233,41 @@ extern "C" fn state() {
 
             msg::reply(ContractStateReply::MessagesFromVirtualContract(to_send), 0)
                 .expect("error sending reply state");
+        },
+        ContractStateQuery::AddressSignlessAccountForAddress(user_address) => {
+            let signless_address = state
+                .signless_accounts_by_owner
+                .get(&user_address);
+
+            msg::reply(ContractStateReply::AddressSignlessAccountForAddress(signless_address.copied()), 0)
+                .expect("Error sending state");
+        },
+        ContractStateQuery::SignlessAccountData(user_address) => {
+            let signless_address = state
+                .signless_accounts_by_owner
+                .get(&user_address);
+
+            let signless_data = if signless_address.is_some() {
+                state
+                    .signless_accounts
+                    .get(&signless_address.unwrap())
+            } else {
+                None
+            };
+
+            msg::reply(ContractStateReply::SignlessAccountData(signless_data.cloned()), 0)
+                .expect("Error sending state");
         }
     }
 }
 
-fn state_mut() -> &'static mut Contract {
+fn state_mut() -> &'static mut ContractState {
     let state = unsafe { CONTRACT.as_mut() };
     debug_assert!(state.is_some(), "State isn't initialized");
     unsafe { state.unwrap_unchecked() }
 }
 
-fn state_ref() -> &'static Contract {
+fn state_ref() -> &'static ContractState {
     let state = unsafe { CONTRACT.as_ref() };
     debug_assert!(state.is_some(), "State isn't initialized");
     unsafe { state.unwrap_unchecked() }

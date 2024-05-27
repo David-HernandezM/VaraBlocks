@@ -26,378 +26,8 @@ import { useAppDispatch } from '@/app/hooks';
 
 
 export default function Index() {
-    const {
-      sendMessage
-    } = useContractUtils();
-    const account = useAccount();
-    const [contractEnums, setContractEnums] = useState([]);
-    const [contractStructs, setContractStructs] = useState([]);
-    // const varaBlocks = useAppSelector((state) => state.varaBlocksTree.blocks);
-    const varaBlocksDispatch = useAppDispatch();
-
-    const [codeBlockItems, setcodeBlockItems] = useState<TreeItems>([]);
-
     return (
-        <>
-         <button onClick={
-          async () => {
-            console.log("Sending message to contract");
-            if (!account.account) {
-              console.log("Account isnt initialized");
-              return;
-            }
-
-            let virtualContractTest: VirtualContractDataToSend = {
-              metadata: {
-                init: {
-                  // NoValue: null
-                  In: ['ContractTestInit']
-                },
-                handle: {
-                  // InOut: ['ContractActions', 'ContractEvent']
-                  Out: ['ContractTestOut']
-                }
-              },
-              // state: ['ContractState', null],
-              state: null,
-              initCode: [
-                {
-                  Variable: {
-                    variableName: 'message',
-                    isMutable: false,
-                    varType: {
-                      Enum: null
-                    },
-                    varValue: {
-                      EnumVal: {
-                        enumFrom: 'ContractEvent',
-                        val: 'Ping'
-                      }
-                    },
-                    isParameter: false
-                  }
-                }
-              ],
-              handleCode: [
-                {
-                  LoadMessage: {
-                    variableName: 'message',
-                    isMutable: false,
-                    varType: {
-                      Enum: null,
-                    },
-                    varValue: {
-                      EnumVal: {
-                        enumFrom: '',
-                        val: ''
-                      }
-                    },
-                    isParameter: false
-                  }
-                },
-                {
-                  ControlFlow: {
-                    Match: {
-                      variableToMatch: 'message',
-                      enumToMatch: 'ContractActions',
-                      codeBlock: [
-                        [
-                          {
-                            SendReply: {
-                              message: {
-                                enumFrom: 'ContractEvent',
-                                val: 'Pong'
-                              }
-                            }
-                          }
-                        ],
-                        [
-                          {
-                            SendMessage: {
-                              to: account.account.decodedAddress,
-                              message: {
-                                enumFrom: 'ContractEvent',
-                                val: 'Ping'
-                              }
-                            }
-                          },
-                          {
-                            SendReply: {
-                              message: {
-                                enumFrom: 'ContractEvent',
-                                val: 'Ping'
-                              }
-                            }
-                          }
-                        ]
-                      ]
-                    }
-                  }
-                },
-                {
-                  SendMessage: {
-                    to: account.account.decodedAddress,
-                    message: {
-                      enumFrom: 'ContractEvent',
-                      val: 'Pong'
-                    }
-                  }
-                }
-              ],
-              enums: [
-                [
-                  'ContractActions', 
-                  {
-                    enumName: 'ContractActions',
-                    enumType: {
-                      ContractActions: null
-                    },
-                    variants: [
-                      'Ping',
-                      'Pong'
-                    ]
-                  }
-                ],
-                [
-                  'ContractEvent',
-                  {
-                    enumName: 'ContractEvent',
-                    enumType: {
-                      ContractEvents: null
-                    },
-                    variants: [
-                      'Ping',
-                      'Pong'
-                    ]
-                  }
-                ]
-              ],
-              structs: [
-                [
-                  'ContractState',
-                  {
-                    structName: 'ContractState',
-                    attributes: [
-                      {
-                        attributeName: 'last_calls',
-                        attributeType: {
-                          Vec: null
-                        },
-                        attributeVal: {
-                          VecVal: {
-                            VecString: []
-                          }
-                        }
-                      }
-                    ]
-                  }
-                ]
-              ]
-            }
-          
-            let x = await sendMessage(
-              account.account.decodedAddress,
-              account.account.meta.source,
-              MAIN_CONTRACT.programId,
-              ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-              {
-                SetVirtualContract: virtualContractTest
-              },
-              0,
-              "Se proceso el mensaje!",
-              "No se proceso el mensaje",
-              "Checando si se procesa el mensaje",
-              "VaraBlocks action:"
-            );
-          }
-        }>
-          Test Virtual contract
-        </button>
-        <button onClick={async () => {
-          console.log("Sending message to contract");
-          if (!account.account) {
-            console.log("Account isnt initialized");
-            return;
-          }
-
-          await sendMessage(
-            account.account.decodedAddress,
-            account.account.meta.source,
-            MAIN_CONTRACT.programId,
-            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-            // {
-            //   Test1: virtualContractTest
-            // },
-            {
-              SendMessageToVirtualContract: {
-                enumFrom: 'ContractActions',
-                val: 'Ping'
-              }
-            },
-            0,
-            "Se proceso el mensaje!",
-            "No se proceso el mensaje",
-            "Checando si se procesa el mensaje",
-            "VaraBlocks action:"
-          );
-        }}>
-          Send ping message
-        </button>
-        <button onClick={ async () => {
-          console.log("Sending message to contract");
-          if (!account.account) {
-            console.log("Account isnt initialized");
-            return;
-          }
-
-          await sendMessage(
-            account.account.decodedAddress,
-            account.account.meta.source,
-            MAIN_CONTRACT.programId,
-            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-            // {
-            //   Test1: virtualContractTest
-            // },
-            {
-              SendMessageToVirtualContract: {
-                enumFrom: 'ContractActions',
-                val: 'Pong'
-              }
-            },
-            0,
-            "Se proceso el mensaje!",
-            "No se proceso el mensaje",
-            "Checando si se procesa el mensaje",
-            "VaraBlocks action:"
-          );
-        }}>
-          Send pong message
-        </button>
-        <button onClick={ async () => {
-          console.log("Sending message to contract");
-          if (!account.account) {
-            console.log("Account isnt initialized");
-            return;
-          }
-
-          //3,226.0679
-          //
-
-          await sendMessage(
-            account.account.decodedAddress,
-            account.account.meta.source,
-            MAIN_CONTRACT.programId,
-            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-            // {
-            //   Test1: virtualContractTest
-            // },
-            {
-              SendMessageToVirtualContract: {
-                enumFrom: 'ContractActions',
-                val: 'Pang'
-              }
-            },
-            0,
-            "Se proceso el mensaje!",
-            "No se proceso el mensaje",
-            "Checando si se procesa el mensaje",
-            "VaraBlocks action:"
-          );
-        }}>
-          Send pang message
-        </button>
-        <button onClick={async () => {
-          console.log("Sending message to contract");
-          if (!account.account) {
-            console.log("Account isnt initialized");
-            return;
-          }
-
-          await sendMessage(
-            account.account.decodedAddress,
-            account.account.meta.source,
-            MAIN_CONTRACT.programId,
-            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-            {
-              SetDefaultVirtualContract: null
-            },
-            0,
-            "Se proceso el mensaje!",
-            "No se proceso el mensaje",
-            "Checando si se procesa el mensaje",
-            "VaraBlocks action:"
-          );
-        }}>
-          Set default contract
-        </button>
-        {/* <button onClick={async () => {
-          console.log("Sending message to contract");
-          if (!account.account) {
-            console.log("Account isnt initialized");
-            return;
-          }
-
-          await sendMessage(
-            account.account.decodedAddress,
-            account.account.meta.source,
-            MAIN_CONTRACT.programId,
-            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-            {
-              AddTestVirtualContract: null
-            },
-            0,
-            "Se proceso el mensaje!",
-            "No se proceso el mensaje",
-            "Checando si se procesa el mensaje",
-            "VaraBlocks action:"
-          );
-        }}>
-          Send tests
-        </button> */}
-        {/* <button onClick={async () => {
-          console.log("Sending message to contract");
-          if (!account.account) {
-            console.log("Account isnt initialized");
-            return;
-          }
-
-          await sendMessage(
-            account.account.decodedAddress,
-            account.account.meta.source,
-            MAIN_CONTRACT.programId,
-            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-            {
-              MakeReservation: null
-            },
-            0,
-            "Se proceso el mensaje!",
-            "No se proceso el mensaje",
-            "Checando si se procesa el mensaje",
-            "VaraBlocks action:"
-          );
-        }}>
-          Make Reservation
-        </button> */}
-
-        {/*
-        <div className='index-container'>
-            <SortableTree items={codeBlockItems} setItems={setcodeBlockItems} />
-        </div>
-        <button onClick={() => {
-          varaBlocksDispatch(addBlock({ id: generateRandomString(15), blockType: 'variable', children: []}));
-          setcodeBlockItems([{ id: generateRandomString(15), blockType: 'variable', children: []}, ...codeBlockItems]) 
-          console.log("ya se guardo segun!");
-          console.log(codeBlockItems);
-          
-        }}>
-          Add Variable
-        </button>
-         */}
-        {/* <ul>
-          <li style={{background: 'red'}}>hola</li>
-        </ul> */}
-      
-        </>
+      <h1>INDEX</h1>
     );
 }
 
@@ -415,6 +45,382 @@ export default function Index() {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// return (
+    //     <>
+    //      {/* <button onClick={
+    //       async () => {
+    //         console.log("Sending message to contract");
+    //         if (!account.account) {
+    //           console.log("Account isnt initialized");
+    //           return;
+    //         }
+
+    //         let virtualContractTest: VirtualContractDataToSend = {
+    //           metadata: {
+    //             init: {
+    //               // NoValue: null
+    //               In: ['ContractTestInit']
+    //             },
+    //             handle: {
+    //               // InOut: ['ContractActions', 'ContractEvent']
+    //               Out: ['ContractTestOut']
+    //             }
+    //           },
+    //           // state: ['ContractState', null],
+    //           state: null,
+    //           initCode: [
+    //             {
+    //               Variable: {
+    //                 variableName: 'message',
+    //                 isMutable: false,
+    //                 varType: {
+    //                   Enum: null
+    //                 },
+    //                 varValue: {
+    //                   EnumVal: {
+    //                     enumFrom: 'ContractEvent',
+    //                     val: 'Ping'
+    //                   }
+    //                 },
+    //                 isParameter: false
+    //               }
+    //             }
+    //           ],
+    //           handleCode: [
+    //             {
+    //               LoadMessage: {
+    //                 variableName: 'message',
+    //                 isMutable: false,
+    //                 varType: {
+    //                   Enum: null,
+    //                 },
+    //                 varValue: {
+    //                   EnumVal: {
+    //                     enumFrom: '',
+    //                     val: ''
+    //                   }
+    //                 },
+    //                 isParameter: false
+    //               }
+    //             },
+    //             {
+    //               ControlFlow: {
+    //                 Match: {
+    //                   variableToMatch: 'message',
+    //                   enumToMatch: 'ContractActions',
+    //                   codeBlock: [
+    //                     [
+    //                       {
+    //                         SendReply: {
+    //                           message: {
+    //                             enumFrom: 'ContractEvent',
+    //                             val: 'Pong'
+    //                           }
+    //                         }
+    //                       }
+    //                     ],
+    //                     [
+    //                       {
+    //                         SendMessage: {
+    //                           to: account.account.decodedAddress,
+    //                           message: {
+    //                             enumFrom: 'ContractEvent',
+    //                             val: 'Ping'
+    //                           }
+    //                         }
+    //                       },
+    //                       {
+    //                         SendReply: {
+    //                           message: {
+    //                             enumFrom: 'ContractEvent',
+    //                             val: 'Ping'
+    //                           }
+    //                         }
+    //                       }
+    //                     ]
+    //                   ]
+    //                 }
+    //               }
+    //             },
+    //             {
+    //               SendMessage: {
+    //                 to: account.account.decodedAddress,
+    //                 message: {
+    //                   enumFrom: 'ContractEvent',
+    //                   val: 'Pong'
+    //                 }
+    //               }
+    //             }
+    //           ],
+    //           enums: [
+    //             [
+    //               'ContractActions', 
+    //               {
+    //                 enumName: 'ContractActions',
+    //                 enumType: {
+    //                   ContractActions: null
+    //                 },
+    //                 variants: [
+    //                   'Ping',
+    //                   'Pong'
+    //                 ]
+    //               }
+    //             ],
+    //             [
+    //               'ContractEvent',
+    //               {
+    //                 enumName: 'ContractEvent',
+    //                 enumType: {
+    //                   ContractEvents: null
+    //                 },
+    //                 variants: [
+    //                   'Ping',
+    //                   'Pong'
+    //                 ]
+    //               }
+    //             ]
+    //           ],
+    //           structs: [
+    //             [
+    //               'ContractState',
+    //               {
+    //                 structName: 'ContractState',
+    //                 attributes: [
+    //                   {
+    //                     attributeName: 'last_calls',
+    //                     attributeType: {
+    //                       Vec: null
+    //                     },
+    //                     attributeVal: {
+    //                       VecVal: {
+    //                         VecString: []
+    //                       }
+    //                     }
+    //                   }
+    //                 ]
+    //               }
+    //             ]
+    //           ]
+    //         }
+          
+    //         let x = await sendMessage(
+    //           account.account.decodedAddress,
+    //           account.account.meta.source,
+    //           MAIN_CONTRACT.programId,
+    //           ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+    //           {
+    //             SetVirtualContract: virtualContractTest
+    //           },
+    //           0,
+    //           "Se proceso el mensaje!",
+    //           "No se proceso el mensaje",
+    //           "Checando si se procesa el mensaje",
+    //           "VaraBlocks action:"
+    //         );
+    //       }
+    //     }>
+    //       Test Virtual contract
+    //     </button> */}
+    //     {/* <button onClick={async () => {
+    //       console.log("Sending message to contract");
+    //       if (!account.account) {
+    //         console.log("Account isnt initialized");
+    //         return;
+    //       }
+
+    //       await sendMessage(
+    //         account.account.decodedAddress,
+    //         account.account.meta.source,
+    //         MAIN_CONTRACT.programId,
+    //         ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+    //         // {
+    //         //   Test1: virtualContractTest
+    //         // },
+    //         {
+    //           SendMessageToVirtualContract: {
+    //             enumFrom: 'ContractActions',
+    //             val: 'Ping'
+    //           }
+    //         },
+    //         0,
+    //         "Se proceso el mensaje!",
+    //         "No se proceso el mensaje",
+    //         "Checando si se procesa el mensaje",
+    //         "VaraBlocks action:"
+    //       );
+    //     }}>
+    //       Send ping message
+    //     </button> */}
+    //     {/* <button onClick={ async () => {
+    //       console.log("Sending message to contract");
+    //       if (!account.account) {
+    //         console.log("Account isnt initialized");
+    //         return;
+    //       }
+
+    //       await sendMessage(
+    //         account.account.decodedAddress,
+    //         account.account.meta.source,
+    //         MAIN_CONTRACT.programId,
+    //         ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+    //         // {
+    //         //   Test1: virtualContractTest
+    //         // },
+    //         {
+    //           SendMessageToVirtualContract: {
+    //             enumFrom: 'ContractActions',
+    //             val: 'Pong'
+    //           }
+    //         },
+    //         0,
+    //         "Se proceso el mensaje!",
+    //         "No se proceso el mensaje",
+    //         "Checando si se procesa el mensaje",
+    //         "VaraBlocks action:"
+    //       );
+    //     }}>
+    //       Send pong message
+    //     </button> */}
+    //     {/* <button onClick={ async () => {
+    //       console.log("Sending message to contract");
+    //       if (!account.account) {
+    //         console.log("Account isnt initialized");
+    //         return;
+    //       }
+
+    //       //3,226.0679
+    //       //
+
+    //       await sendMessage(
+    //         account.account.decodedAddress,
+    //         account.account.meta.source,
+    //         MAIN_CONTRACT.programId,
+    //         ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+    //         // {
+    //         //   Test1: virtualContractTest
+    //         // },
+    //         {
+    //           SendMessageToVirtualContract: {
+    //             enumFrom: 'ContractActions',
+    //             val: 'Pang'
+    //           }
+    //         },
+    //         0,
+    //         "Se proceso el mensaje!",
+    //         "No se proceso el mensaje",
+    //         "Checando si se procesa el mensaje",
+    //         "VaraBlocks action:"
+    //       );
+    //     }}>
+    //       Send pang message
+    //     </button> */}
+    //     {/* <button onClick={async () => {
+    //       console.log("Sending message to contract");
+    //       if (!account.account) {
+    //         console.log("Account isnt initialized");
+    //         return;
+    //       }
+
+    //       await sendMessage(
+    //         account.account.decodedAddress,
+    //         account.account.meta.source,
+    //         MAIN_CONTRACT.programId,
+    //         ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+    //         {
+    //           SetDefaultVirtualContract: null
+    //         },
+    //         0,
+    //         "Se proceso el mensaje!",
+    //         "No se proceso el mensaje",
+    //         "Checando si se procesa el mensaje",
+    //         "VaraBlocks action:"
+    //       );
+    //     }}>
+    //       Set default contract
+    //     </button> */}
+    //     {/* <button onClick={async () => {
+    //       console.log("Sending message to contract");
+    //       if (!account.account) {
+    //         console.log("Account isnt initialized");
+    //         return;
+    //       }
+
+    //       await sendMessage(
+    //         account.account.decodedAddress,
+    //         account.account.meta.source,
+    //         MAIN_CONTRACT.programId,
+    //         ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+    //         {
+    //           AddTestVirtualContract: null
+    //         },
+    //         0,
+    //         "Se proceso el mensaje!",
+    //         "No se proceso el mensaje",
+    //         "Checando si se procesa el mensaje",
+    //         "VaraBlocks action:"
+    //       );
+    //     }}>
+    //       Send tests
+    //     </button> */}
+    //     {/* <button onClick={async () => {
+    //       console.log("Sending message to contract");
+    //       if (!account.account) {
+    //         console.log("Account isnt initialized");
+    //         return;
+    //       }
+
+    //       await sendMessage(
+    //         account.account.decodedAddress,
+    //         account.account.meta.source,
+    //         MAIN_CONTRACT.programId,
+    //         ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+    //         {
+    //           MakeReservation: null
+    //         },
+    //         0,
+    //         "Se proceso el mensaje!",
+    //         "No se proceso el mensaje",
+    //         "Checando si se procesa el mensaje",
+    //         "VaraBlocks action:"
+    //       );
+    //     }}>
+    //       Make Reservation
+    //     </button> */}
+
+    //     {/*
+    //     <div className='index-container'>
+    //         <SortableTree items={codeBlockItems} setItems={setcodeBlockItems} />
+    //     </div>
+    //     <button onClick={() => {
+    //       varaBlocksDispatch(addBlock({ id: generateRandomString(15), blockType: 'variable', children: []}));
+    //       setcodeBlockItems([{ id: generateRandomString(15), blockType: 'variable', children: []}, ...codeBlockItems]) 
+    //       console.log("ya se guardo segun!");
+    //       console.log(codeBlockItems);
+          
+    //     }}>
+    //       Add Variable
+    //     </button>
+    //      */}
+    //     {/* <ul>
+    //       <li style={{background: 'red'}}>hola</li>
+    //     </ul> */}
+      
+    //     </>
+    // );
 
 
 

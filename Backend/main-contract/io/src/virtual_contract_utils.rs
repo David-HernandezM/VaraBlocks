@@ -555,7 +555,7 @@ impl VirtualContract {
 
 // Impl for logic in the virtual contract
 impl VirtualContract {
-    pub fn handle_message(&mut self, message: EnumVal) -> Result<(VirtualContractMessage, Vec<MessageToSend>), VirtualContractMessage> {
+    pub fn handle_message(&mut self, message: EnumVal, address_to_reply: ActorId) -> Result<(VirtualContractMessage, Vec<MessageToSend>), VirtualContractMessage> {
         // With this check, we are sure that the reveived message is correct.
 
         let codeblock_from = if self.initialized {
@@ -875,7 +875,7 @@ impl VirtualContract {
 
                         messages_to_send.push(
                             MessageToSend {
-                                to: msg::source(),
+                                to: address_to_reply,
                                 message: message.clone(),
                                 message_type_to_send: MessageTypeToSend::Send
                             }

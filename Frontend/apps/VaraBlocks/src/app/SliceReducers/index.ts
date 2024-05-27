@@ -38,6 +38,11 @@ export {
     modifySendReplyEnumVariantName
 } from "./VaraBlocksData/varaBlocksDataSlice";
 
+export {
+    setSignlessAccount,
+    removeSignlessAccount
+} from "./SignlessAccountData/signlessAccountDataSlice";
+
 export type { 
     VaraBlockEnum,
     VaraBlockCodeBlock

@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import VaraBlocksDataReducer from "../SliceReducers/VaraBlocksData/varaBlocksDataSlice";
+import SignlessDataReducer from '../SliceReducers/SignlessAccountData/signlessAccountDataSlice';
 
 export const store = configureStore({
     reducer: {
-        VaraBlocksData: VaraBlocksDataReducer
+        VaraBlocksData: VaraBlocksDataReducer,
+        SignlessData: SignlessDataReducer
     }
 });
 

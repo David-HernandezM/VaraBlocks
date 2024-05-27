@@ -18,15 +18,17 @@ import {
     enumDataByName
 } from '@/app/utils';
 import { removeItem } from '@/components/DndLibrary/Tree/utilities';
-import './VirtualContractData.scss';
 import { TreeItems } from '@/components/DndLibrary/Tree/types';
 import { useAlert } from '@gear-js/react-hooks';
+
+import './VirtualContractMetadataFields.scss';
+
 
 
 // [TODO]: if the name of enum is changing, but not deleted, change variant, and not put 'NoValue'
 
 
-export function VirtualContractData() {
+export function VirtualContractMetadataFields() {
     const initMetadata = useAppSelector((state) => state.VaraBlocksData.initMetadata);
     const handleMetadata = useAppSelector((state) => state.VaraBlocksData.handleMetadata);
     const sendMessageBlocks = useAppSelector((state) => state.VaraBlocksData.sendMessageBlocks);
@@ -73,19 +75,19 @@ export function VirtualContractData() {
     }
 
     return (
-        <div className='virtual-contract-data'>
-            <h2 className='virtual-contract-data__title'>Virtual Contract Metadata</h2>
-            <div className='virtual-contract-data__information'>
-                <p className='virtual-contract-data__title virtual-contract-data__title--subtitle'>
+        <div className='virtual-contract-metadata'>
+            <h2 className='virtual-contract-metadata__title'>Virtual Contract Metadata</h2>
+            <div className='virtual-contract-metadata__information'>
+                <p className='virtual-contract-metadata__title virtual-contract-metadata__title--subtitle'>
                     Metadata - Init
                 </p>
-                <div className='virtual-contract-data__metadata'>
+                <div className='virtual-contract-metadata__metadata'>
                     <div>
                         <label htmlFor="inMetadataInit">In: </label>
                         <select 
                             name="inMetadataInit" 
                             id="inMetadataInit" 
-                            className='virtual-contract-data__selection'
+                            className='virtual-contract-metadata__selection'
                             value={formatMetadata(initMetadata)[0]} 
                             onChange={(e) => {
                                 if (e.target.value !== 'NoValue') {
@@ -137,7 +139,7 @@ export function VirtualContractData() {
                         <select 
                             name="outMetadataInit" 
                             id="outMetadataInit" 
-                            className='virtual-contract-data__selection'
+                            className='virtual-contract-metadata__selection'
                             value={formatMetadata(initMetadata)[1]} 
                             onChange={(e) => {
                                 let selectedVariant: string | null;
@@ -215,16 +217,16 @@ export function VirtualContractData() {
                         </select>
                     </div>
                 </div>
-                <p className='virtual-contract-data__title virtual-contract-data__title--subtitle'>
+                <p className='virtual-contract-metadata__title virtual-contract-metadata__title--subtitle'>
                     Metadata - handle
                 </p>
-                <div className='virtual-contract-data__metadata'>
+                <div className='virtual-contract-metadata__metadata'>
                     <div>
                         <label htmlFor="inMetadataHandle">In: </label>
                         <select 
                             name="inMetadataHandle" 
                             id="inMetadataHandle" 
-                            className='virtual-contract-data__selection'
+                            className='virtual-contract-metadata__selection'
                             value={formatMetadata(handleMetadata)[0]} 
                             onChange={(e) => {
                                 if (e.target.value !== 'NoValue') {
@@ -279,7 +281,7 @@ export function VirtualContractData() {
                         <select 
                             name="outMetadataHandle" 
                             id="outMetadataHandle" 
-                            className='virtual-contract-data__selection'
+                            className='virtual-contract-metadata__selection'
                             value={formatMetadata(handleMetadata)[1]} 
                             onChange={(e) => {
                                 let selectedVariant: string | null;
@@ -359,10 +361,10 @@ export function VirtualContractData() {
                 </div>
                 
                 <div 
-                    className='virtual-contract-data__state'
+                    className='virtual-contract-metadata__state'
                 >
                     <label 
-                        className='virtual-contract-data__title virtual-contract-data__title--subtitle'
+                        className='virtual-contract-metadata__title virtual-contract-metadata__title--subtitle'
                         htmlFor="virtualcontract-state-data"
                     >
                         State:
@@ -370,7 +372,7 @@ export function VirtualContractData() {
                     <select 
                         name="virtualcontract-state-data" 
                         id="virtualcontract-state-data"
-                        className='virtual-contract-data__selection'
+                        className='virtual-contract-metadata__selection'
                         value={formatStateType(virtualContractState)}
                         onChange={(e) => {
                             console.log(`Seleccionado: ${e.target.value}`);
@@ -393,7 +395,7 @@ export function VirtualContractData() {
 
                 {/* {metadataToString(virtualContractData.virtualContractMetadata?.handle ?? { NoValue: null })} */}
 
-                {/* <p className='virtual-contract-data__title virtual-contract-data__title--subtitle'>
+                {/* <p className='virtual-contract-metadata__title virtual-contract-metadata__title--subtitle'>
                     State: {
                         virtualContractData.virtualContractState
                         ? virtualContractData.virtualContractState.structName
@@ -427,7 +429,7 @@ export function VirtualContractData() {
                 accountHasVirtualContract ? (
                     
                 ) : (
-                    <div className='virtual-contract-data__no-state'>
+                    <div className='virtual-contract-metadata__no-state'>
                         <p>
                             No Virtual Contract
                         </p>

@@ -16,6 +16,29 @@ export type Result<T, E = Error> =
 
 
 
+
+
+export interface SignlessAccount {
+    address: string,
+    encoded: string,
+    encoding: SignlessEncodingData,
+    meta: SignlessMetaData
+}
+
+
+export interface SignlessEncodingData {
+    content: [string, string],
+    encoding_types: string,
+    version: string
+}
+
+export interface SignlessMetaData {
+    name: string
+}
+
+
+
+
 export type MetadataTypes =
     { In: [EnumName] } |
     { Out: [EnumName] } |

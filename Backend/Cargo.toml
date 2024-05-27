@@ -26,15 +26,15 @@ main-contract-io.path = "main-contract/io"
 
 # Gear
 
-galloc = "1.1.1"
-gcli = "1.1.1"
-gclient = "1.1.1"
-gcore = "1.1.1"
-gear-wasm-builder = "1.1.1"
-gmeta = "1.1.1"
-gsdk = "1.1.1"
-gstd = "1.1.1"
-gtest = "1.1.1"
+galloc = "1.3.1"
+gcli = "1.3.1"
+gclient = "1.3.1"
+gcore = "1.3.1"
+gear-wasm-builder = "1.3.1"
+gmeta = "1.3.1"
+gsdk = "1.3.1"
+gstd = "1.3.1"
+gtest = "1.3.1"
 
 # External
 

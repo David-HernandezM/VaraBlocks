@@ -1,25 +1,32 @@
-import { useContractUtils, useVirtualContractUtils } from '@/app/hooks';
-import { useAccount } from '@gear-js/react-hooks'
-import React, { useEffect, useState } from 'react'
+import { useContractUtils, useVirtualContractUtils, useSignlessUtils } from '@/app/hooks';
+import { useAccount, useAlert } from '@gear-js/react-hooks'
+import { useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button";
-import './VirtualContractMessageHandler.scss';
-import { Index } from '@/routes';
 import { MAIN_CONTRACT } from '@/app/consts';
 import { ProgramMetadata } from '@gear-js/api';
+import { KeyringPair } from '@polkadot/keyring/types';
+import './VirtualContractMessageHandler.scss';
+
 
 interface Props {
-  virtualContractSet: boolean
+  signlessData: KeyringPair | null
 }
 
-export function VirtualContractMessageHandler() {
+export function VirtualContractMessageHandler({ signlessData }: Props) {
   const account = useAccount();
+  const alert = useAlert();
   const {
-    sendMessage
+    signlessDataFromActualAccount
+  } = useSignlessUtils();
+  const {
+    sendMessage,
+    sendMessageWithSignlessAccount
   } = useContractUtils();
   const {
     virtualContractData,
     messagesFromVirtualConctact
   } = useVirtualContractUtils();
+
   const [userHasVirtualContract, setUserHasVirtualContract] = useState(false);
   const [virtualContractMessages, setVirtualContractMessages] = useState<any[]>([]);
   const [enumName, setEnumName] = useState('');
@@ -74,27 +81,53 @@ export function VirtualContractMessageHandler() {
               <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
                   if (!account.account) return;
 
-                  await sendMessage(
-                    account.account.decodedAddress,
-                    account.account.meta.source,
+                  let temp;
+
+                  if (!signlessData) temp = await signlessDataFromActualAccount();
+                  else temp = signlessData;
+                  
+
+                  await sendMessageWithSignlessAccount(
+                    temp, 
                     MAIN_CONTRACT.programId,
                     ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
                     {
                       SendMessageToVirtualContract: {
-                        enumFrom: enumName,
-                        val: enumVariantName
+                        userAccount: account.account.decodedAddress,
+                        message: {
+                          enumFrom: enumName,
+                          val: enumVariantName
+                        }
                       }
                     },
                     0,
                     "Message send!",
                     "Message was not processed",
                     "Sending message...",
-                    "VaraBlocks action:"
-                  );
+                    "VaraBlocks:"
+                );
 
-                  const contractState = await messagesFromVirtualConctact();
-                  const { messagesFromVirtualContract } = contractState;
-                  setVirtualContractMessages(messagesFromVirtualContract.reverse());
+                // await sendMessage(
+                //   account.account.decodedAddress,
+                //   account.account.meta.source,
+                //   MAIN_CONTRACT.programId,
+                //   ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+                //   {
+                //     SendMessageToVirtualContract: {
+                //       enumFrom: enumName,
+                //       val: enumVariantName
+                //     }
+                //   },
+                //   0,
+                //   "Message send!",
+                //   "Message was not processed",
+                //   "Sending message...",
+                //   "VaraBlocks action:"
+                // );
+
+                const contractState = await messagesFromVirtualConctact();
+                const { messagesFromVirtualContract } = contractState;
+                setVirtualContractMessages(messagesFromVirtualContract.reverse());
               }}>
                   Send message
               </Button>
