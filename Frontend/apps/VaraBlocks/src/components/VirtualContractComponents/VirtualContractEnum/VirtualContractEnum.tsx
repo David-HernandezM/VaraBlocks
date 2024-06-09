@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { generatePassword } from "@/app/utils";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { 
@@ -11,7 +10,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { DeleteButton } from "@/components/DeleteButton/DeleteButton";
 import "./VirtualContractEnum.scss";
-import { useAlert } from "@gear-js/react-hooks";
 
 interface VirtualContractEnumProps {
     enumId: string

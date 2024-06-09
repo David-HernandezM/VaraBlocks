@@ -11,6 +11,7 @@ export const buttonVariants = cva('', {
       black: styles.black,
       outline: styles.outline,
       text: styles.text,
+      lightBlue: styles.lightBlue
     },
     size: {
       small: styles.sm,

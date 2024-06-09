@@ -1,25 +1,29 @@
-import { useContractUtils, useVirtualContractUtils, useSignlessUtils } from '@/app/hooks';
+import { useContractUtils, useVirtualContractUtils, useAppSelector } from '@/app/hooks';
 import { useAccount, useAlert } from '@gear-js/react-hooks'
-import { useEffect, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import { Button } from "@/components/ui/button";
 import { MAIN_CONTRACT } from '@/app/consts';
-import { ProgramMetadata } from '@gear-js/api';
+import { HexString, ProgramMetadata, decodeAddress } from '@gear-js/api';
 import { KeyringPair } from '@polkadot/keyring/types';
+import { SignlessForm } from '@/components/SignlessForm/SignlessForm';
+import { signlessDataContext } from '@/app/Context';
+
 import './VirtualContractMessageHandler.scss';
 
 
 interface Props {
-  signlessData: KeyringPair | null
+  accountToReceiveMessages: HexString | null
+  virtualContractId: string | null
 }
 
-export function VirtualContractMessageHandler({ signlessData }: Props) {
-  const account = useAccount();
+export function VirtualContractMessageHandler({ accountToReceiveMessages, virtualContractId }: Props) {
+  const { account } = useAccount();
   const alert = useAlert();
+  const { 
+    signlessData, 
+    noWalletAccountName 
+  } = useContext(signlessDataContext);
   const {
-    signlessDataFromActualAccount
-  } = useSignlessUtils();
-  const {
-    sendMessage,
     sendMessageWithSignlessAccount
   } = useContractUtils();
   const {
@@ -27,28 +31,112 @@ export function VirtualContractMessageHandler({ signlessData }: Props) {
     messagesFromVirtualConctact
   } = useVirtualContractUtils();
 
+  const polkadotAccountEnable = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
+
+  const [signlessAccountModalOpen, setSignlessAccountModalOpen] = useState(false);
   const [userHasVirtualContract, setUserHasVirtualContract] = useState(false);
   const [virtualContractMessages, setVirtualContractMessages] = useState<any[]>([]);
   const [enumName, setEnumName] = useState('');
   const [enumVariantName, setEnumVariantName] = useState('');
-  
+
   useEffect(() => {
+    console.log('Se recibira de:');
+    
+    console.log(accountToReceiveMessages);
+    console.log('Cuenta no wallet');
+    console.log(noWalletAccountName);
+    
+    
     (async function() {
-      let contractState = await virtualContractData();
+      if (!virtualContractId || !accountToReceiveMessages) {
+        console.log('No contract to send messages or valid address!');
+        return;
+      }
+
+      console.log('Virtual contract id:');
+      console.log(virtualContractId);
+
+      let contractState = await virtualContractData(virtualContractId);
+
       const contractMessage = Object.keys(contractState)[0];
-      if (contractMessage !== "addresDoesNotHaveVirtualContract") {
-        contractState = await messagesFromVirtualConctact();
+
+
+      if (contractMessage !== "virtualContractIdDoesNotExists") {
+        contractState = await messagesFromVirtualConctact(accountToReceiveMessages);
+        console.log(contractState);
+        
         const { messagesFromVirtualContract } = contractState;
         setVirtualContractMessages(messagesFromVirtualContract.reverse());
         setUserHasVirtualContract(true);
       }
       else setUserHasVirtualContract(false);
     })();
-  }, [account])
-  
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signlessData, accountToReceiveMessages, virtualContractId]);
+
+  const closeSignlessModal = () => {
+    setSignlessAccountModalOpen(false);
+  };
+
+  const handleSendMessage = async (signlessAccountData: KeyringPair, encryptedAccountName: string | null) => {
+    if (!signlessData) {
+      alert.error('Signless account not set!');
+      return;
+    }
+
+    let addressToReadMessages;
+    let payload;
+
+    if (polkadotAccountEnable) {
+      if (!account) {
+        alert.error('Account is not ready!');
+        return;
+      }
+      addressToReadMessages = account.decodedAddress;
+      payload = {
+        SendMessageToVirtualContractWithAddress: {
+          userAccount: account.decodedAddress,
+          message: {
+            enumFrom: enumName,
+            val: enumVariantName
+          },
+          virtualContractId
+        }
+      };
+    } else {
+      addressToReadMessages = decodeAddress(signlessData.address);
+      payload = {
+        SendMessageToVirtualContractWithNoWalletAccount: {
+          noWalletAccount: encryptedAccountName,
+          message: {
+            enumFrom: enumName,
+            val: enumVariantName
+          },
+          virtualContractId
+        }
+      }
+    }
+    
+    await sendMessageWithSignlessAccount(
+      signlessAccountData, 
+      MAIN_CONTRACT.programId,
+      ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+      payload,
+      0,
+      "Message send!",
+      "Message was not processed",
+      "Sending message...",
+      "VaraBlocks:"
+    );
+
+    const contractState = await messagesFromVirtualConctact(addressToReadMessages);
+    const { messagesFromVirtualContract } = contractState;
+    setVirtualContractMessages(messagesFromVirtualContract.reverse());
+  }
 
   return (
     <div className='message-handler'>
+      { signlessAccountModalOpen && <SignlessForm close={closeSignlessModal}  /> }
       <h2 className='message-handler__title'>
         Send message
       </h2>
@@ -66,6 +154,7 @@ export function VirtualContractMessageHandler({ signlessData }: Props) {
                   setEnumName(e.target.value);
                 }}
                 value={enumName}
+                autoComplete='off'
               />
               <label htmlFor="messageEnumVariantName">Variant: </label>
               <input 
@@ -77,57 +166,15 @@ export function VirtualContractMessageHandler({ signlessData }: Props) {
                   setEnumVariantName(e.target.value);
                 }}
                 value={enumVariantName}
+                autoComplete='off'
               />
               <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
-                  if (!account.account) return;
+                if (!signlessData) {
+                  setSignlessAccountModalOpen(true);
+                  return;
+                }
 
-                  let temp;
-
-                  if (!signlessData) temp = await signlessDataFromActualAccount();
-                  else temp = signlessData;
-                  
-
-                  await sendMessageWithSignlessAccount(
-                    temp, 
-                    MAIN_CONTRACT.programId,
-                    ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-                    {
-                      SendMessageToVirtualContract: {
-                        userAccount: account.account.decodedAddress,
-                        message: {
-                          enumFrom: enumName,
-                          val: enumVariantName
-                        }
-                      }
-                    },
-                    0,
-                    "Message send!",
-                    "Message was not processed",
-                    "Sending message...",
-                    "VaraBlocks:"
-                );
-
-                // await sendMessage(
-                //   account.account.decodedAddress,
-                //   account.account.meta.source,
-                //   MAIN_CONTRACT.programId,
-                //   ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-                //   {
-                //     SendMessageToVirtualContract: {
-                //       enumFrom: enumName,
-                //       val: enumVariantName
-                //     }
-                //   },
-                //   0,
-                //   "Message send!",
-                //   "Message was not processed",
-                //   "Sending message...",
-                //   "VaraBlocks action:"
-                // );
-
-                const contractState = await messagesFromVirtualConctact();
-                const { messagesFromVirtualContract } = contractState;
-                setVirtualContractMessages(messagesFromVirtualContract.reverse());
+                await handleSendMessage(signlessData, noWalletAccountName);
               }}>
                   Send message
               </Button>

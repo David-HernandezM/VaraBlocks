@@ -1,39 +1,57 @@
-import { Link } from 'react-router-dom';
-import IndexImage from '@/assets/images/image_index.png';
-import { DndContext, DragOverlay, useDroppable, useDraggable, DraggableAttributes } from '@dnd-kit/core';
-import { restrictToParentElement } from '@dnd-kit/modifiers';
-import { createPortal } from 'react-dom';
-import { SortableTree } from '@/components/DndLibrary';
+// import { Link } from 'react-router-dom';
+// import IndexImage from '@/assets/images/image_index.png';
+// import { DndContext, DragOverlay, useDroppable, useDraggable, DraggableAttributes } from '@dnd-kit/core';
+// import { restrictToParentElement } from '@dnd-kit/modifiers';
+// import { createPortal } from 'react-dom';
+// import { SortableTree } from '@/components/DndLibrary';
 
-import './Index.scss';
-import { useState, forwardRef, useEffect } from 'react';
-import { TreeItems } from '@/components/DndLibrary/Tree/types';
-import { generateRandomString } from '@/app/utils';
+// import './Index.scss';
+// import { useState, forwardRef, useEffect, useContext } from 'react';
+// import { TreeItems } from '@/components/DndLibrary/Tree/types';
+// import { generateRandomString } from '@/app/utils';
 
-import { useContractUtils } from '@/app/hooks';
-import { MAIN_CONTRACT } from '@/app/consts';
-import { useAccount } from '@gear-js/react-hooks';
-import { ProgramMetadata } from '@gear-js/api';
+// import { useContractUtils } from '@/app/hooks';
+// import { MAIN_CONTRACT } from '@/app/consts';
+// import { useAccount } from '@gear-js/react-hooks';
+// import { ProgramMetadata } from '@gear-js/api';
 
-import { CodeBlock, Variable, ControlFlow, VirtualContractTypes, Match, SendMessage, SendReply, VirtualContractDataToSend, EnumVal } from '@/app/app_types/types';
+// import { CodeBlock, Variable, ControlFlow, VirtualContractTypes, Match, SendMessage, SendReply, VirtualContractDataToSend, EnumVal } from '@/app/app_types/types';
 
-import { useAppDispatch } from '@/app/hooks';
-// import { addBlock } from '@/app/SliceReducers/VaraBlocksTree/varaBlocksTreeSlice';
-
+import { useState, useContext } from 'react';
 
 
-// import { Virtual }
+import { signlessDataContext } from '@/app/Context';
+
+
+import { SignlessForm } from '@/components/SignlessForm/SignlessForm';
+import { Button } from "@/components/ui/button";
+
 
 
 export default function Index() {
-    return (
-      <h1>INDEX</h1>
-    );
+  const { signlessData } = useContext(signlessDataContext);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
+
+
+  const openModal = () => {
+    console.log('Actual signless Data:');
+    console.log(signlessData);
+    setModalIsOpen(true);
+  }
+
+  const closeModal = () => {
+    setModalIsOpen(false);
+  }
+  return (
+    <>
+      <p>TEST MODAL</p>
+      <Button onClick={openModal} isLoading={false}>
+        Open Modal 
+      </Button>
+      { modalIsOpen && <SignlessForm close={closeModal} /> }
+    </> 
+  );
 }
-
-
-
-
 
 
 

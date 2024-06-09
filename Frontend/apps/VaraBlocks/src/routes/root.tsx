@@ -1,34 +1,65 @@
-import { Account, useAccount, useApi } from "@gear-js/react-hooks";
-import { Outlet, useOutletContext } from "react-router-dom";
+import { useAccount, useApi, TemplateAlertOptions, useAlert } from "@gear-js/react-hooks";
+import { Outlet } from "react-router-dom";
+import { useAppDispatch } from "@/app/hooks";
+import { 
+	apiIsBusy,
+	apiIsDisconnected,
+	gearApiStarted, 
+	polkadotAccountIsEnable,
+	setPolkadotAccount
+} from "@/app/SliceReducers";
 import { Header } from "@/components";
-import { GearApi } from "@gear-js/api";
-import { ApiLoader } from '@/components';
+import { useEffect, useContext } from "react";
 
-export type ContextType = { 
-	gearApi: GearApi | undefined,
-	polkadotAccount: Account | undefined
+import { signlessDataContext } from '@/app/Context';
+
+const messageOptions: TemplateAlertOptions = {
+	title: "VaraBlocks: "
 };
 
 export default function Root() {
-    const { isApiReady } = useApi();
-	const { isAccountReady } = useAccount();
+	const { setSignlessData } = useContext(signlessDataContext);
+    const { isApiReady, api } = useApi();
+	const { isAccountReady, account} = useAccount();
+	
+	const alert = useAlert();
+	const dispatch = useAppDispatch();
 
-	const isAppReady = isApiReady && isAccountReady;
+	useEffect(() => {
+		if (account) {
+			dispatch(setPolkadotAccount(account));
+			dispatch(polkadotAccountIsEnable(true));
+		} else {
+			dispatch(setPolkadotAccount(null));
+			dispatch(polkadotAccountIsEnable(false));
+		}
+
+		if (setSignlessData) setSignlessData(null);
+	}, [account]);
+
+	useEffect(() => {
+		if (isApiReady) {
+			api.on('disconnected', () => {
+				alert.error('Api disconnected!', messageOptions);
+				dispatch(apiIsBusy(true));
+			});
+
+			api.on('connected', () => {
+				dispatch(apiIsDisconnected(false));
+				alert.success('Api connected!', messageOptions);
+			});
+
+			dispatch(apiIsDisconnected(false));
+			alert.success('Api started!', messageOptions);
+		}
+
+		dispatch(gearApiStarted(isApiReady));
+	}, [isApiReady]);
 
     return (
 		<>
 			<Header isAccountVisible={isAccountReady} />
-			<div>
-				{
-					isAppReady
-					? <Outlet/>
-					: <ApiLoader />
-				}
-			</div>
+			<Outlet/>
 		</>
 	)
-}
-
-export function useGearHooks() {
-	return useOutletContext<ContextType>();
 }

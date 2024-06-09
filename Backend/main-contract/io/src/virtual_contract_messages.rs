@@ -30,7 +30,7 @@ pub struct MessageToSend {
 #[derive(Encode, Decode, TypeInfo, Clone)]
 #[codec(crate = gstd::codec)]
 #[scale_info(crate = gstd::scale_info)]
-pub enum VirtualContractMessage {
+pub enum InterpreterMessage {
     Error(VirtualContractErrors),
     MessageProcessed,
     MessagesToSend(Vec<MessageToSend>),

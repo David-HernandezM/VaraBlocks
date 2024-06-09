@@ -39,9 +39,14 @@ export {
 } from "./VaraBlocksData/varaBlocksDataSlice";
 
 export {
-    setSignlessAccount,
-    removeSignlessAccount
-} from "./SignlessAccountData/signlessAccountDataSlice";
+    gearApiStarted,
+    apiIsBusy,
+    apiIsDisconnected,
+    polkadotAccountIsEnable,
+    setPolkadotAccount,
+    setPolkadotPassword,
+    setNormalAccount
+} from './AppGlobalData/AppGlobalDataSlice';
 
 export type { 
     VaraBlockEnum,

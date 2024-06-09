@@ -1,4 +1,4 @@
-import { GearKeyring, IUpdateVoucherParams, decodeAddress, HexString } from '@gear-js/api';
+import { GearKeyring, IUpdateVoucherParams, decodeAddress, HexString, GearApi } from '@gear-js/api';
 import { useAccount, useApi, useAlert, TemplateAlertOptions, useBalanceFormat } from '@gear-js/react-hooks';
 import { ONE_TVARA_VALUE, seed, VOUCHER_MIN_LIMIT } from '../consts';
 
@@ -20,9 +20,8 @@ const useVoucherUtils = () => {
       }
 
       const totalVoucherBalance = await voucherBalance(voucherId);
-
-      console.log('TOTAL BALANCEEEEEE: ', totalVoucherBalance);
       
+      console.log('Voucher balance: ', totalVoucherBalance);
 
       if (totalVoucherBalance < VOUCHER_MIN_LIMIT) {
         await addOneTokenToVoucher(voucherId,account);
@@ -151,6 +150,7 @@ const useVoucherUtils = () => {
             "Renewing voucher",
             "VaraBlocks: "
         );
+        resolve(true);
       } catch (e) {
         console.log("Error during sign transaction");
         reject("Error while sign transaction");
@@ -180,6 +180,7 @@ const useVoucherUtils = () => {
             "Adding tokens to voucher",
             "VaraBlocks: "
         )
+        resolve(true);
       } catch (e) {
         console.log("Error while sign transaction");
         reject("Error while sign transaction");
@@ -196,11 +197,12 @@ const useVoucherUtils = () => {
   ): Promise<boolean> => {
     return new Promise(async (resolve, reject) => {
 
-        const alertOptions: TemplateAlertOptions = {
-            title: titleLoadingMessage,
-          };
+      const alertOptions: TemplateAlertOptions = {
+          title: titleLoadingMessage,
+        };
 
       let loadingMessageId = alert.loading(loadingMessage, alertOptions);
+
       const keyring = await GearKeyring.fromSeed(seed, 'AdminDavid');
 
       try {

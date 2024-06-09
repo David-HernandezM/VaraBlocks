@@ -36,7 +36,7 @@ export function AccountInfo() {
       ) : (
         <Button icon={userSVG} text="Sign in" onClick={openModal} className={styles.login_button} />
       )}
-      {isModalOpen && <AccountsModal accounts={accounts} close={closeModal} />}
+      {isModalOpen && <AccountsModal accounts={accounts} close={closeModal} />} 
     </>
   );
 }

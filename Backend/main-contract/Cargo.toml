@@ -11,6 +11,7 @@ gmeta.workspace = true
 [dev-dependencies]
 #program-state = {workspace = true, features = ["binary-vendor"]}
 gtest.workspace = true
+main-contract-io.workspace = true
 
 [build-dependencies]
 gear-wasm-builder.workspace = true

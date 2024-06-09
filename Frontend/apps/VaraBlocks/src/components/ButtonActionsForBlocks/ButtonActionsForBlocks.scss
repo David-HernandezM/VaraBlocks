@@ -1,0 +1,15 @@
+.buttons-actions-for-blocks {
+    display: flex;
+    flex-direction: column;
+    padding-top: 10px;
+    border: 1px solid white;
+    border-left: none;
+    padding: 10px 10px;
+    gap: 10px;
+
+    & > p {
+        font-size: large;
+        text-align: center;
+        color: white;
+    }
+}

@@ -184,6 +184,81 @@ a.base[aria-disabled='true'] {
   }
 }
 
+.lightBlue {
+  @extend .btn;
+  --btn-bg-color: #64edff;
+  --btn-border-color: var(--btn-bg-color);
+  --btn-text-color: #000;
+  position: relative;
+  z-index: 0;
+  border-color: transparent;
+
+  &::before,
+  &::after {
+    --btn-bg-color: #64edff;
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    z-index: -1;
+    border-radius: 2px;
+  }
+
+  &::before {
+    background: linear-gradient(270deg, #64edff 0%, #64edff 100%);
+    transition: opacity 350ms ease;
+  }
+
+  &::after {
+    opacity: 0;
+    background-color: var(--btn-bg-color);
+    transition: opacity 350ms ease, background-color 350ms ease;
+  }
+
+  &:not([disabled]) {
+    &:hover,
+    &:focus-visible {
+      &::after {
+        // --btn-bg-color: #91fcdd;
+        --btn-bg-color: #9cf3ff;
+        opacity: 1;
+      }
+    }
+
+    &:active {
+      &::after {
+        // --btn-bg-color: #0ed3a3;
+        --btn-bg-color: #64edff;
+        opacity: 1;
+      }
+    }
+  }
+
+  &[aria-disabled='true'],
+  &:disabled {
+    &::before {
+      background: linear-gradient(270deg, rgba(100, 255, 219, 0.07) 0%, rgba(0, 255, 196, 0.07) 100%);
+    }
+  }
+
+  &.loading {
+    --btn-text-color: #474747;
+    opacity: 100%;
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
 .white {
   @extend .btn;
   --btn-bg-color: #fff;

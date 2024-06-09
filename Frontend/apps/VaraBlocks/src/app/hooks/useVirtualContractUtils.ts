@@ -1,37 +1,35 @@
-import { useAccount, useApi } from "@gear-js/react-hooks"
+import { useAccount } from "@gear-js/react-hooks"
 import useContractUtils from "./useContractUtils";
 import { MAIN_CONTRACT } from "../consts";
-import { ProgramMetadata } from "@gear-js/api";
+import { HexString } from "@gear-js/api";
 
 const useVirtualContractUtils = () => {
     const account = useAccount();
     const {
-        sendMessage,
         readState
     } = useContractUtils();
 
-    const virtualContractData = async () => {
-        if (!account) return;
+    const virtualContractData = async (virtualContractId: string): Promise<any> => {
 
         const constractState = await readState(
             MAIN_CONTRACT.programId,
             MAIN_CONTRACT.programMetadata,
             {
-                VirtualContract: account.account?.decodedAddress
+                VirtualContract: virtualContractId
             }
         );
 
         return JSON.parse(JSON.stringify(constractState));
     }
 
-    const messagesFromVirtualConctact = async () => {
+    const messagesFromVirtualConctact = async (messagesForAddress: HexString): Promise<any> => {
         if (!account) return;
 
         const contractState = await readState(
             MAIN_CONTRACT.programId,
             MAIN_CONTRACT.programMetadata,
             {
-                MessagesFromVirtualContract: account.account?.decodedAddress
+                MessagesFromVirtualContract: messagesForAddress 
             }
         );
 

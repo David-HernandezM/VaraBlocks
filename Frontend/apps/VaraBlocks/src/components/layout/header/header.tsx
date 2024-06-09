@@ -2,6 +2,7 @@ import React from 'react';
 import { Logo } from './logo';
 import { AccountInfo } from './account-info';
 import { Link, NavLink } from 'react-router-dom';
+import { ToggleSwitchAccounts } from '@/components/ToggleSwitchAccounts/ToggleSwitchAccounts';
 import './header.scss';
 
 type Props = {
@@ -31,6 +32,8 @@ export function Header({ isAccountVisible }: Props) {
             </li>
           </ul> */}
         </nav>
+
+        <ToggleSwitchAccounts />
       
         {isAccountVisible && <AccountInfo />}
       </div>      

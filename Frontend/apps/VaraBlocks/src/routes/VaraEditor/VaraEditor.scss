@@ -18,7 +18,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 40px;
+    gap: 20px;
     margin-top: 10px;
     margin-bottom: 5px;
     padding-left: 40px;
@@ -56,6 +56,9 @@
     background-color: #27B435;
 }
 
+.varaeditor__edition-options--unselected {
+    border: 1px solid white;
+}
 
 .varaeditor__container {
     height: 59.6rem;
@@ -91,21 +94,7 @@
     justify-content: center;
 }
 
-.varaeditor__contract-editor-logic__container__buttons-block {
-    display: flex;
-    flex-direction: column;
-    padding-top: 10px;
-    border: 1px solid white;
-    border-left: none;
-    padding: 10px 10px;
-    gap: 10px;
 
-    & > p {
-        font-size: large;
-        text-align: center;
-        color: white;
-    }
-}
 
 .varaeditor__contract-editor-logic--sketch {
     display: flex;

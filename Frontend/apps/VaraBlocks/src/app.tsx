@@ -1,8 +1,7 @@
-import './app.scss';
-import '@gear-js/vara-ui/dist/style.css';
-import { useAccount, useApi } from '@gear-js/react-hooks';
+
 import { withProviders } from '@/app/hocs';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
+import { SignlessDataProvider } from "@/app/Context"; 
 import { 
   Root, 
   ErrorPage,
@@ -10,13 +9,10 @@ import {
   VaraEditor
 } from './routes';
 
+import './app.scss';
+import '@gear-js/vara-ui/dist/style.css';
 
 function Component() {
-  const { isApiReady } = useApi();
-  const { isAccountReady } = useAccount();
-
-  const isAppReady = isApiReady && isAccountReady;
-
   const router = createBrowserRouter([
     {
       path: "/",
@@ -28,7 +24,7 @@ function Component() {
           children: [
             {
               index: true,
-              element: <VaraEditor />,//<Index />
+              element: <VaraEditor />, //<Index />
             },
             {
               path: "account",
@@ -49,7 +45,9 @@ function Component() {
   ]);
 
   return (
-    <RouterProvider router={router} />
+    <SignlessDataProvider>
+      <RouterProvider router={router} />
+    </SignlessDataProvider>
   );
 }
 

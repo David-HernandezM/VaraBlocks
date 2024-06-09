@@ -2,11 +2,6 @@
 
 import { HexString } from "@gear-js/api";
 
-export type EnumName = string;
-export type EnumNameVariant = string;
-export type StructName = string;
-export type StructAttributeName = string;
-
 
 
 export type Result<T, E = Error> =
@@ -15,8 +10,19 @@ export type Result<T, E = Error> =
 
 
 
+export interface SignlessSession {
+    accountName: string,
+    password: string
+}
 
 
+
+
+
+export type EnumName = string;
+export type EnumNameVariant = string;
+export type StructName = string;
+export type StructAttributeName = string;
 
 export interface SignlessAccount {
     address: string,

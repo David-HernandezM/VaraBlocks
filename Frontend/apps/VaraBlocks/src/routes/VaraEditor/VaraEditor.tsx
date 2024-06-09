@@ -1,36 +1,28 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useContext } from "react";
 import { 
     VirtualContractEnum, 
     VirtualContractStruct, 
     VirtualContractMetadataFields,
-    VirtualContractMessageHandler
+    VirtualContractMessageHandler,
+    ButtonActionsForBlocks
 } from "@/components";
 import { 
-    generatePassword, 
-    metadataHasIn, 
-    metadataHasOut,
-    firstVariantFromEnumI,
-    enumDataByName
+    generatePassword,
+    generateRandomString
 } from "@/app/utils"; 
-import { useAppDispatch, useAppSelector, useContractUtils, useSignlessUtils } from "@/app/hooks";
+import { useAppDispatch, useAppSelector, useContractUtils } from "@/app/hooks";
 import { 
     addEnumToContract, 
     addStructToContract,
     setBlocksOnInit,
     setBlocksOnHandle,
-    addBlock,
-    removeBlock,
     VaraBlockEnum,
-    setSignlessAccount,
-    removeSignlessAccount
+    apiIsBusy
 } from "@/app/SliceReducers";
 import {  
-    ContractEnumInterface, 
     Variable,
-    EnumVal,
     VirtualContractDataToSend,
     VirtualContractMetadata, 
-    VirtualContractStateType,
     CodeBlock, 
     ContractEnum,
     ContractStruct,
@@ -44,94 +36,77 @@ import {
     StructAttribute
 } from '@/app/app_types/types';
 import { KeyringPair } from '@polkadot/keyring/types';
-
-
-
 import { Button } from "@/components/ui/button";
-import { TreeItem, TreeItems } from "@/components/DndLibrary/Tree/types";
+import { TreeItems } from "@/components/DndLibrary/Tree/types";
 import { SortableTree } from "@/components/DndLibrary";
 import { useAccount, useAlert } from "@gear-js/react-hooks";
-import "./VaraEditor.scss";
 import { VaraBlockStruct } from "@/app/SliceReducers/VaraBlocksData/varaBlocksDataSlice";
 import { MAIN_CONTRACT } from "@/app/consts";
-import { ProgramMetadata, decodeAddress } from "@gear-js/api";
-import { IKeyringPair } from "@polkadot/types/types";
-// import { MAIN_CONTRACT } from "@/app/consts";
+import { HexString, ProgramMetadata, decodeAddress } from "@gear-js/api";
+import { signlessDataContext } from "@/app/Context";
+
+import "./VaraEditor.scss";
+import { SignlessForm } from "@/components";
 
 
 
 export default function VaraEditor() {
     const account = useAccount();
     const alert = useAlert();
+    const { 
+        signlessData, 
+        noWalletAccountName,
+    } = useContext(signlessDataContext);
     const {
-        sendMessage,
         sendMessageWithSignlessAccount,
-        readState,
     } = useContractUtils();
-    const {
-        signlessDataFromActualAccount,
-        signlessDataFromContract,
-        createAndSaveAccountNewPair,
-        signlessActualAccountFromLocalStorage,
-        unlockActualPair,
-    } = useSignlessUtils();
 
+    const polkadotAccountEnable = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
+    const apiIsCurrentlyBusy = useAppSelector((state) => state.AccountsSettings.apiIsBusy);
+    const apiIsReady = useAppSelector((state) => state.AccountsSettings.apiStarted);
+    const apiIsDisconnected = useAppSelector((state) => state.AccountsSettings.apiIsDisconnected);
 
     const initBlocks = useAppSelector((state) => state.VaraBlocksData.initBlocks);
     const handleBlocks = useAppSelector((state) => state.VaraBlocksData.handleBlocks);
-
     const loadMessageBlocks = useAppSelector((state) => state.VaraBlocksData.loadMessagesBlocks);
     const sendMessagesBlocks = useAppSelector((state) => state.VaraBlocksData.sendMessageBlocks);
     const replymessageBlocks = useAppSelector((state) => state.VaraBlocksData.sendReplyBlocks);
-    const variableBlocks = useAppSelector((state) => state.VaraBlocksData.variablesBlocks);
+    // const variableBlocks = useAppSelector((state) => state.VaraBlocksData.variablesBlocks);
     const matchBlocks = useAppSelector((state) => state.VaraBlocksData.matchBlocks);
-
-
-
-
-
-
     const initMetadata = useAppSelector((state) => state.VaraBlocksData.initMetadata);
     const handleMetadata = useAppSelector((state) => state.VaraBlocksData.handleMetadata);
-
     const virtualContractStateData = useAppSelector((state) => state.VaraBlocksData.state);
     const enumsData = useAppSelector((state) => state.VaraBlocksData.enums);
     const structsData = useAppSelector((state) => state.VaraBlocksData.structs);
+
     const dispatch = useAppDispatch();
+
     const [structsEditorOpen, setStructsEditorOpen] = useState(false);
     const [enumsEditorOpen, setEnumsEditorOpen] = useState(false);
     const [contractEditorOpen, setContractEditorOpen] = useState(true);
     const [virtualContractDataOpen, setVirtualContractDataOpen] = useState(false);
     const [initCodeEditionOpen, setInitCodeEditionOpen] = useState(true);
     const [handleCodeEditionOpen, setHandleCodeEditionOpen] = useState(false);
+    const [signlessAccountModalOpen, setSignlessAccountModalOpen] = useState(false);
 
+    const [addressToReceiveMessages, setAddressToReceiveMessages] = useState<HexString | null>(signlessData ? decodeAddress(signlessData.address) : null);
+    const [virtualContractAddress, setVirtualContractAddress] = useState<string | null>(null);
 
-
-
-    const [signlessAccountData, setSignlessAccountData] = useState<KeyringPair | null>(null);
-
-
-
-
-    // const [accountHasVirtualContract, setAccountHasVirtualContract] = useState(false);
-    // const [virtualContractState, setVirtualContractState] = useState<ContractStruct | null>(null);
-    // const [virtualContractMetadata, setVirtualContractMetadata] = useState<VirtualContractMetadata>();
+    const closeSignlessModal = () => {
+        setSignlessAccountModalOpen(false);
+    };
 
     const configEditionButtonsPressed = (btn1: boolean, btn2: boolean, btn3: boolean, btn4: boolean) => {
         setContractEditorOpen(btn1);
         setStructsEditorOpen(btn2);
         setEnumsEditorOpen(btn3);
         setVirtualContractDataOpen(btn4);
-    }
+    };
 
     const configEditionBlocksButtonsPressed = (initButton: boolean, handleButton: boolean) => {
         setInitCodeEditionOpen(initButton);
         setHandleCodeEditionOpen(handleButton);
-    }
-
-
-    
-
+    };
 
     const treeItemsToCodeBlocks = (treeItems: TreeItems, parent: BlockType): Result<CodeBlock[], string >=> {
         const codeBlocks: CodeBlock[] = [];
@@ -233,7 +208,26 @@ export default function VaraEditor() {
         };
 
         return { ok: true, value: codeBlocks };
-    }
+    };
+
+    useEffect(() => {
+        if (polkadotAccountEnable) {
+            if (!account.account) {
+                setAddressToReceiveMessages(null);
+            } else {
+                setAddressToReceiveMessages(account.account.decodedAddress);
+            }
+            return;
+        }
+
+        if (signlessData) {
+            setAddressToReceiveMessages(decodeAddress(signlessData.address));
+        }
+
+        setAddressToReceiveMessages(null);
+        
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [account]);
 
     // [TODO]: revisar que los enums y structs esten bien, ya que el usuario no puede meterlos a la metadata
     // y aun asi mandarlos al contrato, ocasionando bugs como nombres vacios, etc.
@@ -242,6 +236,7 @@ export default function VaraEditor() {
     const enumsDataToEnumsBlock = (enumsData: VaraBlockEnum): [EnumName, ContractEnum][] => {
         let enumsFormated: [EnumName, ContractEnum][] = [];
 
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         for (const [_, contractEnumData] of Object.entries(enumsData)) {
             const contractEnumName = contractEnumData.enumName.trim();
 
@@ -266,7 +261,7 @@ export default function VaraEditor() {
         }
 
         return enumsFormated;
-    }
+    };
 
     const structsDataToStructBlocks = (structsData: VaraBlockStruct): [StructName, ContractStruct][] => {
         let structsFormated: [StructName, ContractStruct][] = [];
@@ -291,610 +286,250 @@ export default function VaraEditor() {
         }
 
         return structsFormated;
+    };
+
+    const handleCreateVirtualContract = async (signlessAccountData: KeyringPair, encryptedAccount: string | null): Promise<void> => {
+        return new Promise(async (resolve, reject) => {
+            dispatch(apiIsBusy(true));
+
+            const virtualContractMetadata: VirtualContractMetadata = {
+                init: initMetadata,
+                handle: handleMetadata
+            };
+
+            const initCode = treeItemsToCodeBlocks(initBlocks, 'empty');
+            const handleCode = treeItemsToCodeBlocks(handleBlocks, 'empty');
+
+            if (!initCode.ok) {
+                alert.error(initCode.error);
+                return;
+            }
+
+            if (!handleCode.ok) {
+                alert.error(handleCode.error);
+                return;
+            }
+
+            const enums = enumsDataToEnumsBlock(enumsData);
+            const structs = structsDataToStructBlocks(structsData);
+
+            const virtualContract: VirtualContractDataToSend = {
+                metadata: virtualContractMetadata,
+                state: virtualContractStateData,
+                initCode: initCode.value,
+                handleCode: handleCode.value,
+                enums,
+                structs
+            };
+
+            console.log("sending message!");
+
+            const virtualContractId = generateRandomString(40);
+
+            console.log('Vitual contract id que se creo:');
+            console.log(virtualContractId);
+
+            if (polkadotAccountEnable) {
+                if (!account.account) {
+                    alert.error("Account is not already!");
+                    reject("Account is not already!");
+                    return;
+                }
+
+                
+
+                await sendMessageWithSignlessAccount(
+                    signlessAccountData,
+                    MAIN_CONTRACT.programId,
+                    ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+                    {
+                        AddVirtualContractToAdress: {
+                            userAccount: account.account.decodedAddress,
+                            virtualContract,
+                            virtualContractId: virtualContractId
+                        }
+                    },
+                    0,
+                    "Virtual Contract set!",
+                    "Erron while sending virtual contract",
+                    "Sending virtual contract...",
+                    "VaraBlocks action:"
+                );
+
+                dispatch(apiIsBusy(false));
+
+                setAddressToReceiveMessages(account.account.decodedAddress);
+                setVirtualContractAddress(virtualContractId);
+                return;
+            }
+
+            await sendMessageWithSignlessAccount(
+                signlessAccountData,
+                MAIN_CONTRACT.programId,
+                ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+                {
+                    AddVirtualContractToNoWalletAccount: {
+                        noWalletAccount: encryptedAccount,
+                        virtualContract,
+                        virtualContractId: virtualContractId
+                    }
+                },
+                0,
+                "Virtual Contract set!",
+                "Erron while sending virtual contract",
+                "Sending virtual contract...",
+                "VaraBlocks action:"
+            );
+            
+            dispatch(apiIsBusy(false));
+            setAddressToReceiveMessages(decodeAddress(signlessAccountData.address));
+            setVirtualContractAddress(virtualContractId);
+            resolve();
+        });
     }
 
-
-    useEffect(() => {
-        setSignlessAccountData(null);
-    }, [account])
-    
-
-
     return (
-        <div className="varaeditor">
-            <div className="varaeditor__edition-buttons">
-                <ul className="varaeditor__edition-options">
-                    <li 
-                        className={contractEditorOpen ? "varaeditor__edition-options--selected" : ""}
-                        onClick={() => configEditionButtonsPressed(true, false, false, false)}
+        <>
+            { signlessAccountModalOpen && <SignlessForm close={closeSignlessModal} onDataCollected={handleCreateVirtualContract} /> }
+            <div className="varaeditor">
+                <div className="varaeditor__edition-buttons">
+                    <ul className="varaeditor__edition-options">
+                        <li 
+                            className={contractEditorOpen ? "varaeditor__edition-options--selected" : "varaeditor__edition-options--unselected"}
+                            onClick={() => configEditionButtonsPressed(true, false, false, false)}
+                        >
+                            Contract editor
+                        </li>
+                        <li 
+                            className={structsEditorOpen ? "varaeditor__edition-options--selected" : "varaeditor__edition-options--unselected"}
+                            onClick={() => configEditionButtonsPressed(false, true, false, false)}
+                        > 
+                            Structs editor
+                        </li>
+                        <li 
+                            className={enumsEditorOpen ? "varaeditor__edition-options--selected" : "varaeditor__edition-options--unselected"}
+                            onClick={() => configEditionButtonsPressed(false, false, true, false)}
+                        >
+                            Enums editor
+                        </li>
+                        <li 
+                            className={virtualContractDataOpen ? "varaeditor__edition-options--selected" : "varaeditor__edition-options--unselected"}
+                            onClick={() => configEditionButtonsPressed(false, false, false, true)}
+                        >
+                            Metadata editor
+                        </li>
+                    </ul>
+                    <Button 
+                        size={"small"} 
+                        textSize={"medium"} 
+                        textWeight={"weight2"} 
+                        width={"normal"} 
+                        onClick={async () => {
+                            if (!signlessData) {
+                                console.log('Cuenta signless no esta puesta!!!');
+                                
+                                setSignlessAccountModalOpen(true);
+                                return;
+                            }
+
+                            handleCreateVirtualContract(signlessData, noWalletAccountName ?? "");
+                        }}
+                        isLoading={
+                            !apiIsReady || apiIsCurrentlyBusy || apiIsDisconnected
+                        }
                     >
-                        Contract editor
-                    </li>
-                    <li 
-                        className={structsEditorOpen ? "varaeditor__edition-options--selected" : ""}
-                        onClick={() => configEditionButtonsPressed(false, true, false, false)}
-                    > 
-                        Structs editor
-                    </li>
-                    <li 
-                        className={enumsEditorOpen ? "varaeditor__edition-options--selected" : ""}
-                        onClick={() => configEditionButtonsPressed(false, false, true, false)}
-                    >
-                        Enums editor
-                    </li>
-                    <li 
-                        className={virtualContractDataOpen ? "varaeditor__edition-options--selected" : ""}
-                        onClick={() => configEditionButtonsPressed(false, false, false, true)}
-                    >
-                        Metadata editor
-                    </li>
-                </ul>
-                <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
-                    if (!account.account) {
-                        console.log("Account isnt initialized");
-                        return;
-                      }
-
-                    const virtualContractMetadata: VirtualContractMetadata = {
-                        init: initMetadata,
-                        handle: handleMetadata
-                    };
-
-                    const initCode = treeItemsToCodeBlocks(initBlocks, 'empty');
-                    const handleCode = treeItemsToCodeBlocks(handleBlocks, 'empty');
-
-                    if (!initCode.ok) {
-                        alert.error(initCode.error);
-                        return;
-                    }
-
-                    if (!handleCode.ok) {
-                        alert.error(handleCode.error);
-                        return;
-                    }
-
-                    const enums = enumsDataToEnumsBlock(enumsData);
-                    const structs = structsDataToStructBlocks(structsData);
-
-                    const virtualContract: VirtualContractDataToSend = {
-                        metadata: virtualContractMetadata,
-                        state: virtualContractStateData,
-                        initCode: initCode.value,
-                        handleCode: handleCode.value,
-                        enums,
-                        structs
-                    };
-
-                    let signlessAccount;
-
-                    if (!signlessAccountData) {
-                        signlessAccount = await signlessDataFromActualAccount();
-                        setSignlessAccountData(signlessAccount);
-                    } else signlessAccount = signlessAccountData;
-
-                    console.log('Imprimiendo la cuenta signless!!');
-                    console.log(signlessAccount);
-                    
-                    console.log("sending message!");
-
-                    await sendMessageWithSignlessAccount(
-                        signlessAccount,
-                        MAIN_CONTRACT.programId,
-                        ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-                        {
-                          SetVirtualContract: {
-                            userAccount: account.account.decodedAddress,
-                            virtualContract
-                          }
-                        },
-                        0,
-                        "Virtual Contract set!",
-                        "Erron while sending virtual contract",
-                        "Sending virtual contract...",
-                        "VaraBlocks action:"
-                    );
-                }}>
-                    Send Virtual Contract
-                </Button>
-            </div>
-            <div className="varaeditor__container">
-                {
-                    contractEditorOpen && 
-                    <div className="varaeditor__contract-editor">
-                        <div className="varaeditor__contract-editor-logic">
-                            <ul className="varaeditor__edition-options varaeditor__edition-options--codeblock-options">
-                                <li 
-                                    className={initCodeEditionOpen ? "varaeditor__edition-options--selected" : ""}
-                                    onClick={() => {configEditionBlocksButtonsPressed(true, false)}}
-                                >
-                                    init blocks
-                                </li>
-                                <li
-                                    className={handleCodeEditionOpen ? "varaeditor__edition-options--selected" : ""}
-                                    onClick={() => {configEditionBlocksButtonsPressed(false, true)}}
-                                >
-                                    handle blocks
-                                </li>
-                            </ul>
-                            <div className="varaeditor__contract-editor-logic__container">
-                                <div className="varaeditor__contract-editor-logic__container__buttons-block">
-                                    <p className="">Actions</p>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        // console.log(metadataHasIn(initMetadata));
-                                        // console.log(metadataHasIn(handleMetadata));
-
-                                        const initMetadataIn = metadataHasIn(initMetadata);
-                                        const handleMetadataIn = metadataHasIn(handleMetadata);
-                                        
-                                        if (initCodeEditionOpen && !initMetadataIn) {
-                                            alert.error('No "In" metadata in: init');
-                                            return;
-                                        } 
-                                        
-
-                                        if (handleCodeEditionOpen && !handleMetadataIn) {
-                                            alert.error('No "In" metadata in: handle');
-                                            return;
-                                        } 
-
-                                        const metadataEnumName = initCodeEditionOpen
-                                            ? initMetadataIn as string
-                                            : handleMetadataIn as string;
-
-                                        const enumData = enumDataByName(metadataEnumName, enumsData) as ContractEnumInterface;
-
-                                        const hasVariants = firstVariantFromEnumI(enumData);
-
-                                        if (!hasVariants) {
-                                            alert.error(`Cant read message from '${enumData.enumName}', need at least one variant!`);
-                                            return;
-                                        }
-
-                                        const blockId = generatePassword();
-
-                                        const blockToSave: TreeItem = {
-                                            id: blockId,
-                                            blockType: 'loadmessage',
-                                            children: []
-                                        };
-
-                                        const varaBlock: CodeBlock = {
-                                            LoadMessageI: {
-                                                data: {
-                                                    variableName: '',
-                                                    isMutable: false,
-                                                    varType: {
-                                                      Enum: null
-                                                    },
-                                                    varValue: {
-                                                      EnumVal: {
-                                                        enumFrom: enumData.enumName,
-                                                        val: ''
-                                                      }
-                                                    },
-                                                    isParameter: false
-                                                },
-                                                loadInInit: initCodeEditionOpen
-                                            }
-                                        }
-
-                                        dispatch(addBlock({
-                                            treeBlock: blockToSave,
-                                            block: varaBlock,
-                                            blockType: 'loadmessage',
-                                            blockId,
-                                            saveOnInitBlocks: initCodeEditionOpen
-                                        }));
-                                        
-                                        console.log("Agregar Load messaage");
-                                    }}>
-                                        Load message
-                                    </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        const initMetadataOut = metadataHasOut(initMetadata);
-                                        const handleMetadataOut = metadataHasOut(handleMetadata);
-
-                                        if (initCodeEditionOpen && !initMetadataOut) {
-                                            alert.error('No "Out" metadata in: init');
-                                            return;
-                                        } 
-                                        
-                                        if (handleCodeEditionOpen && !handleMetadataOut) {
-                                            alert.error('No "Out" metadata in: handle');
-                                            return;
-                                        } 
-
-                                        const metadataEnumName = initCodeEditionOpen
-                                            ? initMetadataOut as string
-                                            : handleMetadataOut as string;
-
-                                        const enumData = enumDataByName(metadataEnumName, enumsData) as ContractEnumInterface;
-
-                                        console.log('Enum get:');
-                                        console.log(enumData);
-
-                                        const selectedVariant = firstVariantFromEnumI(enumData);
-
-                                        console.log('first variant from enum');
-                                        console.log(selectedVariant);
-
-                                        if (!selectedVariant) {
-                                            alert.error(`Virtual contract enum '${metadataEnumName}' does not have valid variants!`);
-                                            return;
-                                        }
-
-                                        const blockId = generatePassword();
-
-                                        const blockToSave: TreeItem = {
-                                            id: blockId,
-                                            blockType: 'sendmessage',
-                                            children: []
-                                        };
-
-                                        const varaBlock: CodeBlock = {
-                                            SendMessageI: {
-                                                data: {
-                                                    message: {
-                                                        enumFrom: initCodeEditionOpen
-                                                            ? initMetadataOut as string
-                                                            : handleMetadataOut as string,
-                                                        val: selectedVariant,
-                                                    },
-                                                    to: '0x00000000000000000000000000000000'
-                                                },
-                                                sendMessageInInit: initCodeEditionOpen
-                                            }
-                                        };
-
-                                        dispatch(addBlock({
-                                            treeBlock: blockToSave,
-                                            block: varaBlock,
-                                            blockType: 'sendmessage',
-                                            blockId,
-                                            saveOnInitBlocks: initCodeEditionOpen
-                                        }));
-                                    }}>
-
-                                        Send Message
-                                    </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        const initMetadataOut = metadataHasOut(initMetadata);
-                                        const handleMetadataOut = metadataHasOut(handleMetadata);
-
-                                        if (initCodeEditionOpen && !initMetadataOut) {
-                                            alert.error('No "Out" metadata in: init');
-                                            return;
-                                        } 
-                                        
-                                        if (handleCodeEditionOpen && !handleMetadataOut) {
-                                            alert.error('No "Out" metadata in: handle');
-                                            return;
-                                        } 
-
-                                        const metadataEnumName = initCodeEditionOpen
-                                            ? initMetadataOut as string
-                                            : handleMetadataOut as string;
-
-                                        const enumData = enumDataByName(metadataEnumName, enumsData) as ContractEnumInterface;
-
-                                        console.log('Enum get:');
-                                        console.log(enumData);
-
-                                        const selectedVariant = firstVariantFromEnumI(enumData);
-
-                                        console.log('first variant from enum');
-                                        console.log(selectedVariant);
-
-                                        if (!selectedVariant) {
-                                            alert.error(`Virtual contract enum '${metadataEnumName}' does not have valid variants!`);
-                                            return;
-                                        }
-
-                                        const blockId = generatePassword();
-
-                                        const blockToSave: TreeItem = {
-                                            id: blockId,
-                                            blockType: 'replymessage',
-                                            children: []
-                                        };
-
-                                        const varaBlock: CodeBlock = {
-                                            SendReplyI: {
-                                                data: {
-                                                    message: {
-                                                        enumFrom: initCodeEditionOpen
-                                                            ? initMetadataOut as string
-                                                            : handleMetadataOut as string,
-                                                        val: selectedVariant,
-                                                    }
-                                                },
-                                                sendReplyInInit: initCodeEditionOpen
-                                            }
-                                        };
-
-                                        dispatch(addBlock({
-                                            treeBlock: blockToSave,
-                                            block: varaBlock,
-                                            blockType: 'replymessage',
-                                            blockId,
-                                            saveOnInitBlocks: initCodeEditionOpen
-                                        }));
-                                    }}>
-                                        Send Reply
-                                    </Button>
-                                    {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        console.log("Agregar variable");
-                                    }}>
-                                        Change state
-                                    </Button> */}
-                                    {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        const blockId = generatePassword();
-
-                                        const blockToSave: TreeItem = {
-                                            id: blockId,
-                                            blockType: 'loadmessage',
-                                            children: []
-                                        };
-
-                                        const varaBlock: CodeBlock = {
-                                            LoadMessage: {
-                                              variableName: 'message',
-                                              isMutable: false,
-                                              varType: {
-                                                Enum: null
-                                              },
-                                              varValue: {
-                                                EnumVal: {
-                                                  enumFrom: 'ContractEvent',
-                                                  val: 'Ping'
-                                                }
-                                              },
-                                              isParameter: false
-                                            }
-                                        }
-
-                                        dispatch(addBlock({
-                                            treeBlock: blockToSave,
-                                            block: varaBlock,
-                                            blockType: 'loadmessage',
-                                            blockId,
-                                            saveOnInitBlocks: initCodeEditionOpen
-                                        }));
-                                        console.log("Agregar variable");
-                                    }}>
-                                        Add variable
-                                    </Button> */}
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        const loadMessagesBlocksData = Object.entries(loadMessageBlocks);
-                                        const variablesBlocksData = Object.entries(variableBlocks);
-
-                                        // It can take variable value because we check all state with load messages before.
-
-                                        let variableNameToMatch: string = '';
-                                        let variableEnumNameToMatch: string = '';
-                                        if (loadMessagesBlocksData.length === 0 && variablesBlocksData.length === 0) {
-                                            alert.error('No variables to match!');
-                                            return;
-                                        } else if (loadMessagesBlocksData.length !== 0) {
-                                            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-                                            const [_, temp] = loadMessagesBlocksData[0];
-                                            const loadMessageData = temp as { LoadMessageI: { data: Variable, loadInInit: boolean } };
-                                            
-                                            variableNameToMatch = loadMessageData.LoadMessageI.data.variableName;
-                                            variableEnumNameToMatch = (loadMessageData.LoadMessageI.data.varValue  as { EnumVal: EnumVal }).EnumVal.enumFrom ;
-                                        } else {
-                                            const variableData = (variablesBlocksData[0][1] as { VariableI: { data: Variable, variableInInit: boolean } }).VariableI.data;
-                                            variableNameToMatch = variableData.variableName;
-                                            variableEnumNameToMatch = (variableData.varValue  as { EnumVal: EnumVal }).EnumVal.enumFrom ;
-                                        }
-
-                                        if (variableNameToMatch.trim() === '') {
-                                            alert.error('No variables to match!');
-                                            return;
-                                        }
-
-                                        const enumData = enumDataByName(variableEnumNameToMatch, enumsData);
-
-                                        if (!enumData) {
-                                            alert.error(`Enum '${variableEnumNameToMatch} does not exists!`);
-                                            return;
-                                        }
-
-                                        
-
-                                        const blockId = generatePassword();
-
-                                        const matchArmsIds: string[] = [];
-
-                                        const blockToSave: TreeItem = {
-                                            id: blockId,
-                                            blockType: 'match',
-                                            children: Object.entries(enumData.variants).map((([_, enumVariantName]) => {
-                                                const matchArmId = `${generatePassword()} ${blockId} ${enumData.enumName} ${enumVariantName}`;
-                                                matchArmsIds.push(matchArmId)
-                                                return {
-                                                    id: matchArmId,
-                                                    blockType: 'matcharm',
-                                                    isDisabled: true,
-                                                    children: []
-                                                };
-                                            }))
-                                        };
-
-                                        const varaBlock: CodeBlock = {
-                                            ControlFlow: {
-                                                Match: { 
-                                                    data: {
-                                                        variableToMatch: variableNameToMatch,
-                                                        enumToMatch: variableEnumNameToMatch,
-                                                        codeBlock: []
-                                                    },
-                                                    matchArmsIds: matchArmsIds, 
-                                                    matchInInit: initCodeEditionOpen 
-                                                }
-                                            }
-                                        }
-
-                                        dispatch(addBlock({
-                                            treeBlock: blockToSave,
-                                            block: varaBlock,
-                                            blockType: 'match',
-                                            blockId,
-                                            saveOnInitBlocks: initCodeEditionOpen
-                                        }));
-                                    }}>
-                                        Add match
-                                    </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        // console.log("Checando state");
-                                        // console.log('Load Message Block');
-                                        // console.log(loadMessageBlocks);
-                                        // console.log('Send message block');
-                                        // console.log(sendMessagesBlocks);
-                                        // console.log('Send reply message block');
-                                        // console.log(replymessageBlocks);
-                                        // console.log('Match blocks');
-                                        // console.log(matchBlocks);
-                                        // console.log('Init blocks');
-                                        // console.log(initBlocks);
-                                        // console.log('Handle Blocks');
-                                        // console.log(handleBlocks);
-
-
-
-
-                                        createAndSaveAccountNewPair(
-                                            "123123"
-                                        );
-
-                                        // saveAccountPairToLocalStorage(undefined);
-
-
-                                        // const x = signlessActualAccountFromLocalStorage();
-
-                                        // if (!x && x !== undefined) {
-                                        //     console.log(x);
-                                        //     deleteSignlessAcctountFromLocalStorage();
-                                        //     console.log('Signless acctount deleted!');
-                                        // } else {
-                                        //     console.log('Cuenta no tiene signles account!!');
-                                        //     console.log(signlessAccountsFromLocalStorage());
-                                        // }
-                                    }}>
-                                        Check state
-                                    </Button> 
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
-                                        console.log('Signless account stored on page:');
-                                        console.log(signlessAccountData);
-
-                                        console.log('CUENTA signless de contrato:');
-                                        await signlessDataFromContract();
-
-                                        const signlessActualAccount = signlessActualAccountFromLocalStorage();
-                                        console.log(signlessActualAccount);
-
-                                        console.log(unlockActualPair("123123"));
-                                        
-                                        console.log('');
-                                        
-                                    }}>
-                                        Info
-                                    </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                                        setSignlessAccountData(null);
-                                        console.log("DELETED!!!");
-                                    }}>
-                                        delete signless account from page
-                                    </Button>
-                                    <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={ async () => {
-                                        localStorage.setItem("signless", "{}");
-
-                                        if (!account.account) {
-                                            console.log("Account not ready");
-                                            return;
-                                        }
-
-                                        await sendMessage(
-                                            account.account.decodedAddress,
-                                            account.account.meta.source,
-                                            MAIN_CONTRACT.programId,
-                                            ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-                                            {
-                                                DeleteAllSignlessAccounts: null
-                                            },
-                                            0,
-                                            "All signless accounts deleted!",
-                                            "Erron while deleting all signless",
-                                            "Deleting all signless account",
-                                            "VaraBlocks:"
-                                        );
-
-                                        console.log('SE BORRARON TODAS LAS CUENTAS SIGNLESS!');
-                                        
-                                    }}>
-                                        delete signless in local storage.
-                                    </Button>
+                        Send Virtual Contract
+                    </Button>
+                </div>
+                <div className="varaeditor__container">
+                    {
+                        contractEditorOpen && 
+                        <div className="varaeditor__contract-editor">
+                            <div className="varaeditor__contract-editor-logic">
+                                <ul className="varaeditor__edition-options varaeditor__edition-options--codeblock-options">
+                                    <li 
+                                        className={initCodeEditionOpen ? "varaeditor__edition-options--selected" : "varaeditor__edition-options--unselected"}
+                                        onClick={() => {configEditionBlocksButtonsPressed(true, false)}}
+                                    >
+                                        init blocks
+                                    </li>
+                                    <li
+                                        className={handleCodeEditionOpen ? "varaeditor__edition-options--selected" : "varaeditor__edition-options--unselected"}
+                                        onClick={() => {configEditionBlocksButtonsPressed(false, true)}}
+                                    >
+                                        handle blocks
+                                    </li>
+                                </ul>
+                                <div className="varaeditor__contract-editor-logic__container">
+                                    <ButtonActionsForBlocks 
+                                        initCodeEditionOpen={initCodeEditionOpen}
+                                        handleCodeEditionOpen={handleCodeEditionOpen}
+                                        signlessAccountData={signlessData}
+                                    />
+                                    {
+                                        initCodeEditionOpen && <div className="varaeditor__contract-editor-logic--sketch">
+                                            <div>
+                                                <SortableTree setBlocks={setBlocksOnInit} varaBlocksState={initBlocks} />
+                                            </div>
+                                        </div>
+                                    }
+                                    {
+                                        handleCodeEditionOpen && <div className="varaeditor__contract-editor-logic--sketch">
+                                            <div>
+                                                <SortableTree setBlocks={setBlocksOnHandle} varaBlocksState={handleBlocks} />
+                                            </div>
+                                        </div>
+                                    }
                                 </div>
-                                {
-                                    initCodeEditionOpen && <div className="varaeditor__contract-editor-logic--sketch">
-                                        <div>
-                                            <SortableTree setBlocks={setBlocksOnInit} varaBlocksState={initBlocks} />
-                                        </div>
-                                    </div>
-                                }
-                                {
-                                    handleCodeEditionOpen && <div className="varaeditor__contract-editor-logic--sketch">
-                                        <div>
-                                            <SortableTree setBlocks={setBlocksOnHandle} varaBlocksState={handleBlocks} />
-                                        </div>
-                                    </div>
-                                }
                             </div>
                         </div>
-                    </div>
-                }
-                {
-                    structsEditorOpen && 
-                    <div className="varaeditor__structs-editor">
-                        {
-                            Object.keys(structsData).map((structId, index) => {
-                                return <VirtualContractStruct structId={structId} key={structId}/>
-                            })
-                        }
-                        <Button size={"small"} textSize={"large"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                            const newId = generatePassword();
-                            console.log("Id generated: ", newId);
-                            dispatch(addStructToContract({ newStructId: newId }));
-                        }}>
-                            Add Struct
-                        </Button>
-                    </div>
-                }
-                {
-                    enumsEditorOpen && 
-                    <div className="varaeditor__enums-editor">
-                        {
-                            Object.keys(enumsData).map((enumId, index) => {
-                                return <VirtualContractEnum enumId={enumId} key={enumId}/>
-                            })
-                        }
-                        <Button size={"small"} textSize={"large"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                            const newId = generatePassword();
-                            console.log("Id generated: ", newId);
-                            dispatch(addEnumToContract({ newEnumId: newId }));
-                        }}>
-                            Add Enum
-                        </Button>
-                    </div>
-                }
-                {
-                    virtualContractDataOpen &&
-                    <div className="varaeditor__virtual-contract-data">
-                        <VirtualContractMetadataFields />
-                        <VirtualContractMessageHandler signlessData={signlessAccountData} />
-                    </div>
-                }
+                    }
+                    {
+                        structsEditorOpen && 
+                        <div className="varaeditor__structs-editor">
+                            {
+                                Object.keys(structsData).map((structId, index) => {
+                                    return <VirtualContractStruct structId={structId} key={structId}/>
+                                })
+                            }
+                            <Button size={"small"} textSize={"large"} rounded={"rounded4"} width={"normal"} onClick={() => {
+                                const newId = generatePassword();
+                                console.log("Id generated: ", newId);
+                                dispatch(addStructToContract({ newStructId: newId }));
+                            }}>
+                                Add Struct
+                            </Button>
+                        </div>
+                    }
+                    {
+                        enumsEditorOpen && 
+                        <div className="varaeditor__enums-editor">
+                            {
+                                Object.keys(enumsData).map((enumId, index) => {
+                                    return <VirtualContractEnum enumId={enumId} key={enumId}/>
+                                })
+                            }
+                            <Button size={"small"} textSize={"large"} rounded={"rounded4"} width={"normal"} onClick={() => {
+                                const newId = generatePassword();
+                                console.log("Id generated: ", newId);
+                                dispatch(addEnumToContract({ newEnumId: newId }));
+                            }}>
+                                Add Enum
+                            </Button>
+                        </div>
+                    }
+                    {
+                        virtualContractDataOpen &&
+                        <div className="varaeditor__virtual-contract-data">
+                            <VirtualContractMetadataFields />
+                            <VirtualContractMessageHandler 
+                                accountToReceiveMessages={addressToReceiveMessages}
+                                virtualContractId={virtualContractAddress}
+                            />
+                        </div>
+                    }
+                </div>
             </div>
-        </div>
+        </>
     );
 }
