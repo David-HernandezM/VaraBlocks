@@ -52,8 +52,8 @@ interface VaraBlocksData {
 }
 
 const initialState: VaraBlocksData = {
-    initMetadata: { NoValue: null },
-    handleMetadata: { NoValue: null },
+    initMetadata: { noValue: null },
+    handleMetadata: { noValue: null },
     state: null,
     structs: {},
     enums: {},
@@ -231,6 +231,10 @@ export const varaBlocksSlice = createSlice({
                                 UNumVal: 0
                             };
                             break;
+                        case 'Boolean':
+                            state.structs[attributeStructId].attributes[attributeId].attributeVal = {
+                                BooleanVal: false
+                            }
                     }
                 } else
                     console.log("Struct attribute does  not exists!");

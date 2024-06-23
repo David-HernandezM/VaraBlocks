@@ -89,7 +89,7 @@ export function SortableTree({
   varaBlocksState,
   collapsible,
   // defaultItems = initialItems,
-  indicator = true,
+  indicator = false,
   indentationWidth = 50,
   removable = true
 }: Props) {

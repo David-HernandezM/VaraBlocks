@@ -152,11 +152,11 @@ export const metadataHasOut = (metadata: MetadataTypes): string | null => {
 
   switch (types) {
     case 'Out':
-      const inData = metadata as { Out: [string] };
-      return inData.Out[0];
+      const inData = metadata as { out: [string] };
+      return inData.out[0];
     case 'InOut':
-      const inOutData = metadata as { InOut: [string, string] };
-      return inOutData.InOut[1];
+      const inOutData = metadata as { inOut: [string, string] };
+      return inOutData.inOut[1];
     default:
       return null;
   }
@@ -167,11 +167,11 @@ export const metadataHasIn = (metadata: MetadataTypes): string | null => {
 
   switch (types) {
     case 'In':
-      const inData = metadata as { In: [string] };
-      return inData.In[0];
+      const inData = metadata as { in: [string] };
+      return inData.in[0];
     case 'InOut':
-      const inOutData = metadata as { InOut: [string, string] };
-      return inOutData.InOut[0];
+      const inOutData = metadata as { inOut: [string, string] };
+      return inOutData.inOut[0];
     default:
       return null;
   }
@@ -255,14 +255,14 @@ export const formatMetadata = (metadataType: MetadataTypes): [string, string] =>
 
   switch (mType) {
       case 'In':
-          const metadataTypeValueIn = metadataType as { In: [string] };
-          return [metadataTypeValueIn.In[0], 'NoValue'];
+          const metadataTypeValueIn = metadataType as { in: [string] };
+          return [metadataTypeValueIn.in[0], 'NoValue'];
       case 'Out':
-          const metadataTypeValueOut = metadataType as { Out: [string] };
-          return ['NoValue', metadataTypeValueOut.Out[0]];
+          const metadataTypeValueOut = metadataType as { out: [string] };
+          return ['NoValue', metadataTypeValueOut.out[0]];
       case 'InOut':
-          const metadataTypeValueInOut = metadataType as { InOut: [string, string] };
-          return [metadataTypeValueInOut.InOut[0], metadataTypeValueInOut.InOut[1]];
+          const metadataTypeValueInOut = metadataType as { inOut: [string, string] };
+          return [metadataTypeValueInOut.inOut[0], metadataTypeValueInOut.inOut[1]];
       default:
           return ['NoValue', 'NoValue'];
   }

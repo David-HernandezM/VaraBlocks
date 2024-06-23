@@ -12,17 +12,12 @@ import './VirtualContractMessageHandler.scss';
 
 
 interface Props {
-  accountToReceiveMessages: HexString | null
   virtualContractId: string | null
 }
 
 export function VirtualContractMessageHandler({ accountToReceiveMessages, virtualContractId }: Props) {
   const { account } = useAccount();
-  const alert = useAlert();
-  const { 
-    signlessData, 
-    noWalletAccountName 
-  } = useContext(signlessDataContext);
+  const { signlessData } = useContext(signlessDataContext);
   const {
     sendMessageWithSignlessAccount
   } = useContractUtils();
@@ -30,8 +25,9 @@ export function VirtualContractMessageHandler({ accountToReceiveMessages, virtua
     virtualContractData,
     messagesFromVirtualConctact
   } = useVirtualContractUtils();
-
+  const noWalletEncryptedName = useAppSelector((state) => state.AccountsSettings.noWalletEncryptedName);
   const polkadotAccountEnable = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
+  const alert = useAlert();
 
   const [signlessAccountModalOpen, setSignlessAccountModalOpen] = useState(false);
   const [userHasVirtualContract, setUserHasVirtualContract] = useState(false);
@@ -44,7 +40,7 @@ export function VirtualContractMessageHandler({ accountToReceiveMessages, virtua
     
     console.log(accountToReceiveMessages);
     console.log('Cuenta no wallet');
-    console.log(noWalletAccountName);
+    console.log(noWalletEncryptedName);
     
     
     (async function() {
@@ -174,7 +170,7 @@ export function VirtualContractMessageHandler({ accountToReceiveMessages, virtua
                   return;
                 }
 
-                await handleSendMessage(signlessData, noWalletAccountName);
+                await handleSendMessage(signlessData, noWalletEncryptedName);
               }}>
                   Send message
               </Button>

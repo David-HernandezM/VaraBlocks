@@ -1,22 +1,38 @@
-use gstd::{prelude::*, collections::HashMap, ActorId, msg};
-
-use super::varablocks_types::{CodeBlock, ControlFlow, Variable};
-use super::virtual_contract_struct::*;
-use super::virtual_contract_enum::*;
-use super::virtual_contract_messages::*;
-use super::virtual_contract_state_handlers::*;
-use super::virtual_contract_types::{
-    VirtualContractTypes,
-    VirtualContractTypesVal
+use sails_rtl::{
+    prelude::*,
+    collections::HashMap,
+    ActorId,
+    gstd::msg,
+    format
 };
-use super::virtual_contract_format::VirtualContractDataFromFrontend;
-use crate::{ContractAction, ContractEvent};
+
+use super::{
+    varablocks_types::{
+        CodeBlock,
+        ControlFlow,
+        Variable
+    },
+    virtual_contract_struct::*,
+    virtual_contract_enum::*,
+    virtual_contract_messages::*,
+    virtual_contract_state_handlers::*,
+    virtual_contract_types::{
+        VirtualContractTypes,
+        VirtualContractTypesVal
+    },
+    virtual_contract_format::VirtualContractDataFromFrontend,
+    contracts_io_types::{
+        ContractAction,
+        ContractEvent
+    }
+};
+
 
 pub type VirtualContractStateType = Option<(StructName, Option<ContractStruct>)>;
 
 #[derive(Encode, Decode, TypeInfo, Clone)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub enum MetadataTypes {
     In(EnumName),
     Out(EnumName),
@@ -25,16 +41,16 @@ pub enum MetadataTypes {
 }
 
 #[derive(Encode, Decode, TypeInfo, Clone)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub struct VirtualContractMetadata {
     pub init: MetadataTypes,
     pub handle: MetadataTypes
 }
 
 #[derive(Encode, Decode, TypeInfo, Clone)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub struct UsersMessages {
     pub last_message_send: Option<(EnumName, EnumNameVariant)>,
     pub last_messages: Vec<(EnumName, EnumNameVariant)>
@@ -187,7 +203,7 @@ impl VirtualContract {
     }
 
     pub fn send_message_to(to: ActorId, message: EnumVal) {
-        msg::send(to, ContractEvent::MeesageOfVirtualContract(message), 0)
+        msg::send(to.into(), ContractEvent::MeesageOfVirtualContract(message), 0)
             .expect("Error sending message");
     }
     

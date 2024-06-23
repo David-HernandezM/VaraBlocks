@@ -1,6 +1,6 @@
 use gstd::{collections::{BTreeMap, HashMap}, exec, msg, prelude::*, ActorId, ReservationId};
 
-use main_contract_io::{contracts_io_types::{ContractEvent, ContractStateQuery}, varablocks_types::*};
+use main_contract_io::{contracts_io_types::{ContractEvent, ContractStateQuery}, varablocks_types::*, virtual_contract_format::VirtualContractData};
 use main_contract_io::virtual_contract_utils::*;
 use main_contract_io::virtual_contract_types::*;
 use main_contract_io::virtual_contract_struct::*;
@@ -221,6 +221,82 @@ extern "C" fn state() {
     let state = state_ref();
 
     match message {
+        ContractStateQuery::LastVirtualContractSavedFromAddress(address) => {
+            let Some(virtual_contracts_ids) = state
+                .virtual_contracts_by_actor_id
+                .get(&address) else {
+                send_reply!(ContractStateReply::UserIsNotRegistered);
+                return;
+            };
+
+            let Some(virtual_contract_id) = virtual_contracts_ids.last() else {
+                send_reply!(ContractStateReply::LastVirtualContractFromUser(None));
+                return;
+            };
+
+            let virtual_contract = state
+                .virtual_contracts
+                .get(virtual_contract_id)
+                .unwrap();
+
+            send_reply!(ContractStateReply::LastVirtualContractFromUser(Some(virtual_contract.into())));
+        },
+        ContractStateQuery::LastVirtualContractSavedFromNoWalletAccount(no_wallet_account) => {
+            let Some(virtual_contracts_ids) = state
+                .virtual_contracts_by_no_wallet_account
+                .get(&no_wallet_account) else {
+                    send_reply!(ContractStateReply::UserIsNotRegistered);
+                    return;
+                };
+
+            let Some(virtual_contract_id) = virtual_contracts_ids.last() else {
+                send_reply!(ContractStateReply::LastVirtualContractFromUser(None));
+                return;
+            };
+
+            let virtual_contract = state
+                .virtual_contracts
+                .get(virtual_contract_id)
+                .unwrap();
+
+            send_reply!(ContractStateReply::LastVirtualContractFromUser(Some(virtual_contract.into())));
+        },
+        ContractStateQuery::AllVirtualContractsDataFromAddress(address) => {
+            let Some(virtual_contracts_ids) = state
+                .virtual_contracts_by_actor_id
+                .get(&address) else {
+                send_reply!(ContractStateReply::UserIsNotRegistered);
+                return;
+            };
+
+            let mut virtual_contracts: Vec<VirtualContractData> = vec![];
+
+            for virtual_contract_id in virtual_contracts_ids.iter() {
+                if let Some(virtual_contract_data) = state.virtual_contracts.get(virtual_contract_id) {
+                    virtual_contracts.push(virtual_contract_data.into());   
+                }
+            }
+
+            send_reply!(ContractStateReply::AllVirtualContractsDataFromUser(virtual_contracts));
+        },
+        ContractStateQuery::AllVirtualContractsDataFromNoWalletAccount(no_wallet_account) => {
+            let Some(virtual_contracts_ids) = state
+                .virtual_contracts_by_no_wallet_account
+                .get(&no_wallet_account) else {
+                    send_reply!(ContractStateReply::UserIsNotRegistered);
+                    return;
+                };
+
+            let mut virtual_contracts: Vec<VirtualContractData> = vec![];
+
+            for virtual_contract_id in virtual_contracts_ids.iter() {
+                if let Some(virtual_contract_data) = state.virtual_contracts.get(virtual_contract_id) {
+                    virtual_contracts.push(virtual_contract_data.into());   
+                }
+            }
+
+            send_reply!(ContractStateReply::AllVirtualContractsDataFromUser(virtual_contracts));
+        },
         ContractStateQuery::VirtualContract(virtual_contract_id) => {
             if !state.virtual_contracts.contains_key(&virtual_contract_id) {
                 send_reply!(ContractStateReply::VirtualContractIdDoesNotExists(virtual_contract_id));
@@ -232,6 +308,18 @@ extern "C" fn state() {
                 .unwrap();
 
             send_reply!(ContractStateReply::VirtualContract(virtual_contract.into()));
+        },
+        ContractStateQuery::VirtualContractData(virtual_contract_id) => {
+            if !state.virtual_contracts.contains_key(&virtual_contract_id) {
+                send_reply!(ContractStateReply::VirtualContractIdDoesNotExists(virtual_contract_id));
+                return;
+            }
+
+            let virtual_contract = state.virtual_contracts
+                .get(&virtual_contract_id)
+                .unwrap();
+        
+            send_reply!(ContractStateReply::VirtualContractData(virtual_contract.into()));
         },
         ContractStateQuery::VirtualContractMetadata(virtual_contract_id) => {
             if !state.virtual_contracts.contains_key(&virtual_contract_id) {

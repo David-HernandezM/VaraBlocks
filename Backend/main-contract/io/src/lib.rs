@@ -24,6 +24,7 @@ use virtual_contract_utils::{
 };
 use virtual_contract_messages::{VirtualContractErrors, InterpreterMessage};
 use virtual_contract_format::{
+    VirtualContractDataFromFrontend,
     VirtualContractData,
     VirtualContractState
 };

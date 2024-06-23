@@ -96,14 +96,53 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .varaeditor__contract-editor-logic--sketch {
+    position: relative;
     display: flex;
     justify-content: center;
     align-items: center;
     flex: 1;
     padding: 20px;
     width: 100%;
+    height: 100%;
+    border: solid 1px pink;
 }
+
+.test-container {
+    border: solid 1px green;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .varaeditor__structs-editor {
     display: flex;
@@ -127,3 +166,14 @@
     display: flex;
     // justify-content: center;
 }
+
+
+
+
+
+
+
+
+
+
+

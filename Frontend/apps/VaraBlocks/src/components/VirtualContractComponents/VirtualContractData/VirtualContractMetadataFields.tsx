@@ -46,28 +46,28 @@ export function VirtualContractMetadataFields() {
         if (metadata[0] !== 'NoValue' && metadata[1] !== 'NoValue') {
             varaBlocksDispatch(modifyMetadata({
                 metadataType: {
-                    InOut: metadata,
+                    inOut: metadata,
                 },
                 modifyInitMetadata
             }));
         } else if (metadata[0] !== 'NoValue' && metadata[1] === 'NoValue') {
             varaBlocksDispatch(modifyMetadata({
                 metadataType: {
-                    In: [metadata[0]],
+                    in: [metadata[0]],
                 },
                 modifyInitMetadata
             }));
         } else if (metadata[0] === 'NoValue' && metadata[1] !== 'NoValue') {
             varaBlocksDispatch(modifyMetadata({
                 metadataType: {
-                    Out: [metadata[1]],
+                    out: [metadata[1]],
                 },
                 modifyInitMetadata
             }));
         } else {
             varaBlocksDispatch(modifyMetadata({
                 metadataType: {
-                    NoValue: null,
+                    noValue: null,
                 },
                 modifyInitMetadata
             }));

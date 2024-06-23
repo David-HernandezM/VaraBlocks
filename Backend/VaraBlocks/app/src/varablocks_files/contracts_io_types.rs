@@ -1,28 +1,36 @@
-use gstd::{
+use sails_rtl::{
     prelude::*,
     ActorId
 };
 
 // [TODO]: change name of "InterpreterMessage" to "InterpreterMessage"
 
-use crate::contract_types::MessageFromVirtualContract;
 
 use super::{
-    SignlessAccount,
-    EnumVal,
-    VirtualContractDataFromFrontend,
-    VirtualContractData,
-    InterpreterMessage,
-    VirtualContractState,
-    VirtualContractMetadata,
-    ContractStructFormat,
-    VirtualContractId,
-    NoWalletSessionId
+    contract_types::{
+        SignlessAccount,
+        MessageFromVirtualContract
+    },
+    virtual_contract_enum::EnumVal,
+    virtual_contract_format::{
+        VirtualContractDataFromFrontend,
+        VirtualContractData
+    },
+    virtual_contract_messages::InterpreterMessage,
+    virtual_contract_format::VirtualContractState,
+    virtual_contract_utils::VirtualContractMetadata,
+    virtual_contract_struct::ContractStructFormat,
 };
 
+use crate::state_globals_variables::{
+    virtual_contracts::VirtualContractId,
+    signless_accounts::NoWalletSessionId
+};
+
+
 #[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub enum ContractAction {
     AddVirtualContractToAdress {
         user_account: Option<ActorId>,
@@ -57,8 +65,8 @@ pub enum ContractAction {
 }
 
 #[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub enum ContractEvent {
     MeesageOfVirtualContract(EnumVal),
     MessageOfInterpreter(InterpreterMessage),
@@ -87,8 +95,8 @@ pub enum ContractEvent {
 }
 
 #[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub enum ContractStateQuery {
     LastVirtualContractSavedFromAddress(ActorId),
     LastVirtualContractSavedFromNoWalletAccount(String),
@@ -106,8 +114,8 @@ pub enum ContractStateQuery {
 }
 
 #[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub enum ContractStateReply {
     LastVirtualContractFromUser(Option<VirtualContractData>),
     AllVirtualContractsDataFromUser(Vec<VirtualContractData>),

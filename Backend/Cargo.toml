@@ -2,10 +2,12 @@
 resolver = "2"
 # Keep in the lexicographic order!
 # Remove a member if it's used as a dependency in the workspace.
-members = [
+members = [ "VaraBlocks/app", "VaraBlocks/wasm",
     "contract-test",
     "main-contract",
     "oracle-server",
+    "VaraBlocks/app",
+    "VaraBlocks/wasm"
 ]
 
 [workspace.package]
@@ -23,6 +25,7 @@ publish = false
 
 contract-test-io.path = "contract-test/io"
 main-contract-io.path = "main-contract/io"
+varablocks-app.path = "VaraBlocks/app"
 
 # Gear
 
@@ -36,8 +39,13 @@ gsdk = "1.4.0"
 gstd = "1.4.0"
 gtest = "1.4.0"
 
+gwasm-builder = { package = "gear-wasm-builder", version = "1.4.1" }
+sails-rtl = { git = "https://github.com/gear-tech/sails" }
+sails-idl-gen = { git = "https://github.com/gear-tech/sails" }
+
 # External
 
+scale-info = { version = "2.11.2", default-features = false }
 primitive-types = { version = "0.12", default-features = false }
 sp-core = { version = "29.0.0", default-features = false, features = ["full_crypto", "sp-externalities"] }
 sp-core-hashing = { version = "16", default-features = false }

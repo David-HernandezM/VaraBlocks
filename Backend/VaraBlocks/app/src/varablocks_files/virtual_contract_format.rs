@@ -1,4 +1,7 @@
-use gstd::{prelude::*, ActorId};
+use sails_rtl::{
+    prelude::*,
+    ActorId
+};
 
 use super::{
     virtual_contract_struct::{
@@ -18,11 +21,12 @@ use super::{
     varablocks_types::CodeBlock
 };
 
+
 pub type VirtualContractStateFormatedType = Option<(StructName, Option<ContractStructFormat>)>;
 
 #[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub struct VirtualContractData {
     pub metadata: VirtualContractMetadata,
     pub initialized: bool,
@@ -86,8 +90,8 @@ impl From<&VirtualContract> for VirtualContractData {
 }
 
 #[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub struct VirtualContractDataFromFrontend {
     pub metadata: VirtualContractMetadata,
     pub state: Option<(StructName, Option<ContractStructFormat>)>,
@@ -149,8 +153,8 @@ impl From<&VirtualContract> for VirtualContractDataFromFrontend {
 }
 
 #[derive(Encode, Decode, TypeInfo)]
-#[codec(crate = gstd::codec)]
-#[scale_info(crate = gstd::scale_info)]
+#[codec(crate = sails_rtl::scale_codec)]
+#[scale_info(crate = sails_rtl::scale_info)]
 pub struct VirtualContractState {
     pub metadata: VirtualContractMetadata,
     pub initialized: bool,

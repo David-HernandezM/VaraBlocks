@@ -48,18 +48,15 @@ import { signlessDataContext } from "@/app/Context";
 import "./VaraEditor.scss";
 import { SignlessForm } from "@/components";
 
-
-
 export default function VaraEditor() {
     const account = useAccount();
     const alert = useAlert();
-    const { 
-        signlessData, 
-        noWalletAccountName,
-    } = useContext(signlessDataContext);
+    const { signlessData } = useContext(signlessDataContext);
     const {
         sendMessageWithSignlessAccount,
     } = useContractUtils();
+
+    const noWalletEncryptedName = useAppSelector((state) => state.AccountsSettings.noWalletEncryptedName);
 
     const polkadotAccountEnable = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
     const apiIsCurrentlyBusy = useAppSelector((state) => state.AccountsSettings.apiIsBusy);
@@ -288,6 +285,43 @@ export default function VaraEditor() {
         return structsFormated;
     };
 
+    const createVirtualContractWithDataCollected = (): VirtualContractDataToSend | null => {
+        const virtualContractMetadata: VirtualContractMetadata = {
+            init: initMetadata,
+            handle: handleMetadata
+        };
+
+        const initCode = treeItemsToCodeBlocks(initBlocks, 'empty');
+        const handleCode = treeItemsToCodeBlocks(handleBlocks, 'empty');
+
+        if (!initCode.ok) {
+            alert.error(initCode.error);
+            return null;
+        }
+
+        if (!handleCode.ok) {
+            alert.error(handleCode.error);
+            return null;
+        }
+
+        const enums = enumsDataToEnumsBlock(enumsData);
+        const structs = structsDataToStructBlocks(structsData);
+
+        const virtualContract: VirtualContractDataToSend = {
+            metadata: virtualContractMetadata,
+            state: virtualContractStateData,
+            initCode: initCode.value,
+            handleCode: handleCode.value,
+            enums,
+            structs
+        };
+
+        console.log('El contrato virtual que se mandara sera el siguiente:');
+        console.log(virtualContract);
+
+        return virtualContract;
+    }
+
     const handleCreateVirtualContract = async (signlessAccountData: KeyringPair, encryptedAccount: string | null): Promise<void> => {
         return new Promise(async (resolve, reject) => {
             dispatch(apiIsBusy(true));
@@ -322,6 +356,10 @@ export default function VaraEditor() {
                 structs
             };
 
+            console.log('El contrato virtual que se mandara sera el siguiente:');
+            console.log(virtualContract);
+            
+
             console.log("sending message!");
 
             const virtualContractId = generateRandomString(40);
@@ -338,28 +376,39 @@ export default function VaraEditor() {
 
                 
 
-                await sendMessageWithSignlessAccount(
-                    signlessAccountData,
-                    MAIN_CONTRACT.programId,
-                    ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
-                    {
-                        AddVirtualContractToAdress: {
-                            userAccount: account.account.decodedAddress,
-                            virtualContract,
-                            virtualContractId: virtualContractId
-                        }
-                    },
-                    0,
-                    "Virtual Contract set!",
-                    "Erron while sending virtual contract",
-                    "Sending virtual contract...",
-                    "VaraBlocks action:"
-                );
+                try {
+                    await sendMessageWithSignlessAccount(
+                        signlessAccountData,
+                        MAIN_CONTRACT.programId,
+                        ProgramMetadata.from(MAIN_CONTRACT.programMetadata),
+                        {
+                            AddVirtualContractToAdress: {
+                                userAccount: account.account.decodedAddress,
+                                virtualContract,
+                                virtualContractId: virtualContractId
+                            }
+                        },
+                        0,
+                        "Virtual Contract set!",
+                        "Erron while sending virtual contract",
+                        "Sending virtual contract...",
+                        "VaraBlocks action:"
+                    );
+                } catch (e) {
+                    console.log('ERROOOOR AL MANDAR EL MENSAJEEEEEEEEEEEEEEEEEEEEEEE');
+                    dispatch(apiIsBusy(false));
+                    return;
+                }
+                
 
                 dispatch(apiIsBusy(false));
 
                 setAddressToReceiveMessages(account.account.decodedAddress);
                 setVirtualContractAddress(virtualContractId);
+                console.log(virtualContractId);
+                
+                console.log('TERMINADO');
+                
                 return;
             }
 
@@ -425,6 +474,7 @@ export default function VaraEditor() {
                         textWeight={"weight2"} 
                         width={"normal"} 
                         onClick={async () => {
+                            createVirtualContractWithDataCollected();
                             if (!signlessData) {
                                 console.log('Cuenta signless no esta puesta!!!');
                                 
@@ -432,7 +482,7 @@ export default function VaraEditor() {
                                 return;
                             }
 
-                            handleCreateVirtualContract(signlessData, noWalletAccountName ?? "");
+                            handleCreateVirtualContract(signlessData, noWalletEncryptedName ?? "");
                         }}
                         isLoading={
                             !apiIsReady || apiIsCurrentlyBusy || apiIsDisconnected
@@ -465,6 +515,7 @@ export default function VaraEditor() {
                                         initCodeEditionOpen={initCodeEditionOpen}
                                         handleCodeEditionOpen={handleCodeEditionOpen}
                                         signlessAccountData={signlessData}
+                                        virtualContractAddress={virtualContractAddress}
                                     />
                                     {
                                         initCodeEditionOpen && <div className="varaeditor__contract-editor-logic--sketch">
@@ -522,10 +573,9 @@ export default function VaraEditor() {
                         virtualContractDataOpen &&
                         <div className="varaeditor__virtual-contract-data">
                             <VirtualContractMetadataFields />
-                            <VirtualContractMessageHandler 
-                                accountToReceiveMessages={addressToReceiveMessages}
+                            {/* <VirtualContractMessageHandler 
                                 virtualContractId={virtualContractAddress}
-                            />
+                            /> */}
                         </div>
                     }
                 </div>

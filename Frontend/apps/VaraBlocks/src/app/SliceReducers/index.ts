@@ -43,9 +43,8 @@ export {
     apiIsBusy,
     apiIsDisconnected,
     polkadotAccountIsEnable,
-    setPolkadotAccount,
-    setPolkadotPassword,
-    setNormalAccount
+    setSignlessAddress,
+    setNoWalletEncryptedName
 } from './AppGlobalData/AppGlobalDataSlice';
 
 export type { 

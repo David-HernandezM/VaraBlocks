@@ -6,7 +6,6 @@ import {
 	apiIsDisconnected,
 	gearApiStarted, 
 	polkadotAccountIsEnable,
-	setPolkadotAccount
 } from "@/app/SliceReducers";
 import { Header } from "@/components";
 import { useEffect, useContext } from "react";
@@ -15,7 +14,7 @@ import { signlessDataContext } from '@/app/Context';
 
 const messageOptions: TemplateAlertOptions = {
 	title: "VaraBlocks: "
-};
+}; 
 
 export default function Root() {
 	const { setSignlessData } = useContext(signlessDataContext);
@@ -27,10 +26,8 @@ export default function Root() {
 
 	useEffect(() => {
 		if (account) {
-			dispatch(setPolkadotAccount(account));
 			dispatch(polkadotAccountIsEnable(true));
 		} else {
-			dispatch(setPolkadotAccount(null));
 			dispatch(polkadotAccountIsEnable(false));
 		}
 
@@ -41,12 +38,12 @@ export default function Root() {
 		if (isApiReady) {
 			api.on('disconnected', () => {
 				alert.error('Api disconnected!', messageOptions);
-				dispatch(apiIsBusy(true));
+				dispatch(apiIsDisconnected(true));
 			});
 
 			api.on('connected', () => {
-				dispatch(apiIsDisconnected(false));
 				alert.success('Api connected!', messageOptions);
+				dispatch(apiIsDisconnected(false));
 			});
 
 			dispatch(apiIsDisconnected(false));

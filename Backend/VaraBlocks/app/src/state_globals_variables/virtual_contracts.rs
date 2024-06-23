@@ -1,37 +1,30 @@
-use gstd::{
+use sails_rtl::{
     prelude::*,
-    ActorId,
-    msg,
-    collections::BTreeMap
-};
-use super::{
-    VirtualContract,
-    SignlessAccount,
-    MessageFromVirtualContract,
-    VirtualContractId,
-    ReservationId,
-    NoWalletSessionId,
-    ContractEvent
+    collections::BTreeMap,
+    ActorId
 };
 
-#[derive(Default)]
-pub struct ContractState {
-    pub owner: ActorId,
+use crate::{
+    state_globals_variables::signless_accounts::NoWalletSessionId, varablocks_files::{
+        contract_types::MessageFromVirtualContract, 
+        contracts_io_types::ContractEvent, 
+        virtual_contract_utils::VirtualContract
+    }
+};
+
+pub type VirtualContractId = String;
+
+
+pub static mut VIRTUAL_CONTRACTS: Option<VirtualContractsState> = None;
+
+pub struct VirtualContractsState {
     pub virtual_contracts_by_actor_id: BTreeMap<ActorId, Vec<VirtualContractId>>,
     pub virtual_contracts_by_no_wallet_account: BTreeMap<NoWalletSessionId, Vec<VirtualContractId>>,
     pub virtual_contracts: BTreeMap<VirtualContractId, VirtualContract>,
-
-    pub signless_accounts_by_actor_id: BTreeMap<ActorId, ActorId>,
-    pub signless_accounts_by_no_wallet_account: BTreeMap<String, ActorId>,
-    pub signless_accounts: BTreeMap<ActorId, SignlessAccount>,
-
-
-    pub messages_of_virtual_contracts: BTreeMap<ActorId, Vec<MessageFromVirtualContract>>,
-
-    pub reservations: Vec<ReservationId>
+    pub messages_of_virtual_contracts: BTreeMap<ActorId, Vec<MessageFromVirtualContract>>
 }
 
-impl ContractState {
+impl VirtualContractsState {
     pub fn add_vc_to_address(&mut self, address: ActorId, virtual_contract_id: VirtualContractId, virtual_contract: VirtualContract) -> Result<(), ContractEvent> {
         self.virtual_contracts_by_actor_id
                 .entry(address)
@@ -73,10 +66,6 @@ impl ContractState {
     }
 
     pub fn add_vc_to_no_wallet_account(&mut self, no_wallet_account: String, virtual_contract_id: VirtualContractId, virtual_contract: VirtualContract) -> Result<(), ContractEvent> {
-        // if !self.virtual_contracts_by_no_wallet_account.contains_key(&no_wallet_account) {
-        //     return Err(ContractEvent::NoWalletAccountIsNotRegister);
-        // }
-
         self.virtual_contracts_by_no_wallet_account
             .entry(no_wallet_account)
             .and_modify(|virtual_contracts_id| virtual_contracts_id.push(virtual_contract_id.clone()))
@@ -117,76 +106,6 @@ impl ContractState {
         Ok(())
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    pub fn set_signless_account_to_address(&mut self, user_address: ActorId, signless_account: SignlessAccount) {
-        let caller = msg::source();
-
-        self.add_signless_account(caller, signless_account);
-    
-        self.signless_accounts_by_actor_id
-            .entry(user_address)
-            .and_modify(|current_signless_address| *current_signless_address = caller)
-            .or_insert(caller); 
-    }
-
-    pub fn set_signless_account_to_no_wallet_account(&mut self, no_wallet_account: String, signless_account: SignlessAccount) {
-        let caller = msg::source();
-
-        self.add_signless_account(caller, signless_account);
-
-        self.signless_accounts_by_no_wallet_account
-            .entry(no_wallet_account)
-            .and_modify(|current_signless_address| *current_signless_address = caller)
-            .or_insert(caller);
-
-    }
-
-    fn add_signless_account(&mut self, signless_address: ActorId, signless_account: SignlessAccount) {
-        self.signless_accounts
-            .entry(signless_address)
-            .and_modify(|current_signless_account| *current_signless_account = signless_account.clone())
-            .or_insert(signless_account);
-    }
-
-    pub fn get_user_address(&self, user_address: Option<ActorId>) -> Result<ActorId, ContractEvent> {
-        let caller = msg::source();
-
-        let address = match user_address {
-            Some(address) => {
-                let signless_account = self
-                    .signless_accounts_by_actor_id
-                    .get(&address)
-                    .ok_or(ContractEvent::SignlessAccountHasInvalidSession)?;
-
-                if *signless_account != caller {
-                    return Err(ContractEvent::SignlessAccountNotApproved);
-                }
-
-                address
-            },
-            None => caller
-        };
-
-        Ok(address)
-    }
 
     pub fn virtual_contract_exists_for_address(&self, address: ActorId, virtual_contract_id: VirtualContractId) -> Result<(), ContractEvent> {
         match self.virtual_contracts_by_actor_id.get(&address) {
@@ -253,39 +172,17 @@ impl ContractState {
             None => Err(ContractEvent::NoWalletAccountIsNotRegister)
         }
     }
-
-    pub fn check_signless_address_account(&self, address: ActorId) -> Result<(), ContractEvent> {
-        let caller = msg::source();
-
-        let addres_signless_session = self.signless_accounts_by_actor_id.get(&address);
-
-        let Some(signless_address) = addres_signless_session else {
-            return Err(ContractEvent::UserDoesNotHasSignlessAccount);
-        };
-
-        if caller != *signless_address {
-            return Err(ContractEvent::SessionHasInvalidSignlessAccount);
-        }
-
-        return Ok(());
-    }
-
-    pub fn check_signles_no_wallet_account(&self, no_wallet_account: String) -> Result<(), ContractEvent> {
-        let caller = msg::source();
-
-        let no_wallet_signless_session = self.signless_accounts_by_no_wallet_account.get(&no_wallet_account);
-
-        let Some(signless_address) = no_wallet_signless_session else {
-            return Err(ContractEvent::UserDoesNotHasSignlessAccount);
-        };
-
-        if caller != *signless_address {
-            return Err(ContractEvent::SessionHasInvalidSignlessAccount);
-        }
-
-        Ok(())
-    }
-
+    
 }
 
+pub fn virtual_contracts_state_mut() -> &'static mut VirtualContractsState {
+    let state = unsafe { VIRTUAL_CONTRACTS.as_mut() };
+    debug_assert!(state.is_some(), "State isn't initialized");
+    unsafe { state.unwrap_unchecked() }
+}
 
+pub fn virtual_contracts_state_ref() -> &'static VirtualContractsState {
+    let state = unsafe { VIRTUAL_CONTRACTS.as_ref() };
+    debug_assert!(state.is_some(), "State isn't initialized");
+    unsafe { state.unwrap_unchecked() }
+}

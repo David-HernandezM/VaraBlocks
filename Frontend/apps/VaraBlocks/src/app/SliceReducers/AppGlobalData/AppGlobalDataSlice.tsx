@@ -1,25 +1,23 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { SignlessSession } from "@/app/app_types/types";
 import { Account } from "@gear-js/react-hooks";
+import { HexString } from "@gear-js/api";
 
 interface AppGlobalDataI {
     apiStarted: boolean,
     apiIsBusy: boolean,
     apiIsDisconnected: boolean,
     polkadotEnable: boolean,
-    polkadotAccountData: Account | null,
-    polkadotSignlessPassword: string | null,
-    signlessSession: SignlessSession | null
+    signlessAddress: HexString | null,
+    noWalletEncryptedName: string | null,
 }
 
 const initialState: AppGlobalDataI = {
-    apiStarted: false, //
+    apiStarted: false, 
     apiIsBusy: false,
     apiIsDisconnected: true,
-    polkadotEnable: false, //
-    polkadotAccountData: null, //
-    polkadotSignlessPassword: null, //
-    signlessSession: null //
+    polkadotEnable: false, 
+    signlessAddress: null,
+    noWalletEncryptedName: null 
 }
 
 export const accountSettingsSlice = createSlice({
@@ -50,24 +48,22 @@ export const accountSettingsSlice = createSlice({
         }) => {
             state.polkadotEnable = polkadotEnable.payload;
         },
-        setPolkadotAccount: (state, polkadotAccount: {
-            payload: Account | null,
+
+
+
+        setSignlessAddress: (state, signlessAddress: {
+            payload: HexString | null,
             type: string
         }) => {
-            state.polkadotAccountData = polkadotAccount.payload;
+            state.signlessAddress = signlessAddress.payload;
         },
-        setPolkadotPassword: (state, polkadotPassword: {
+        setNoWalletEncryptedName: (state, encryptedName: {
             payload: string | null,
             type: string
         }) => {
-            state.polkadotSignlessPassword = polkadotPassword.payload;
+            state.noWalletEncryptedName = encryptedName.payload;
         },
-        setNormalAccount: (state, normalAccountData: {
-            payload: SignlessSession,
-            type: string
-        }) => {
-            state.signlessSession = normalAccountData.payload
-        },
+
     }
 });
 
@@ -76,9 +72,8 @@ export const {
     apiIsBusy,
     apiIsDisconnected,
     polkadotAccountIsEnable,
-    setPolkadotAccount,
-    setPolkadotPassword,
-    setNormalAccount
+    setSignlessAddress,
+    setNoWalletEncryptedName
 } = accountSettingsSlice.actions;
 
 export default accountSettingsSlice.reducer;

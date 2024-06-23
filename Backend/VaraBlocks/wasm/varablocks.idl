@@ -1,0 +1,363 @@
+type ContractStateReply = enum {
+  LastVirtualContractFromUser: opt VirtualContractData,
+  AllVirtualContractsDataFromUser: vec VirtualContractData,
+  VirtualContract: VirtualContractState,
+  VirtualContractData: VirtualContractData,
+  VirtualContractMetadata: VirtualContractMetadata,
+  VirtualContractState: opt ContractStructFormat,
+  MessagesFromVirtualContract: vec MessageFromVirtualContract,
+  SignlessAccountAddressForAddress: opt actor_id,
+  SignlessAccountAddressForNoWalletAccount: opt actor_id,
+  SignlessAccountData: opt SignlessAccount,
+  VirtualContractIdDoesNotExists: str,
+  UserIsNotRegistered,
+};
+
+type VirtualContractData = struct {
+  metadata: VirtualContractMetadata,
+  initialized: bool,
+  state: opt struct { str, opt ContractStructFormat },
+  enums: vec struct { str, ContractEnum },
+  structs: vec struct { str, ContractStructFormat },
+  init_code: vec CodeBlock,
+  handle_code: vec CodeBlock,
+};
+
+type VirtualContractMetadata = struct {
+  init: MetadataTypes,
+  handle: MetadataTypes,
+};
+
+type MetadataTypes = enum {
+  In: str,
+  Out: str,
+  InOut: struct { str, str },
+  NoValue,
+};
+
+type ContractStructFormat = struct {
+  struct_name: str,
+  attributes: vec StructAttribute,
+};
+
+type StructAttribute = struct {
+  attribute_name: str,
+  attribute_type: VirtualContractTypes,
+  attribute_val: VirtualContractTypesVal,
+};
+
+type VirtualContractTypes = enum {
+  Vec,
+  ActorId,
+  Variable,
+  NoValue,
+  ReceivedMessage,
+  Enum,
+  INum,
+  UNum,
+  String,
+  Boolean,
+  UnitValue,
+};
+
+type VirtualContractTypesVal = enum {
+  VecVal: VirtualContractVecTypes,
+  ActorIdVal: actor_id,
+  INumVal: i64,
+  UNumVal: u64,
+  StringVal: str,
+  BooleanVal: bool,
+  EnumVal: EnumVal,
+  VariableVal: str,
+};
+
+type VirtualContractVecTypes = enum {
+  VecActorId: vec actor_id,
+  VecString: vec str,
+  VecInt: vec i64,
+  VecNum: vec u64,
+  VecEnum: vec EnumVal,
+  VecTupleStringActorId: vec struct { str, str },
+  VecTupleStringString: vec struct { str, str },
+};
+
+type EnumVal = struct {
+  enum_from: str,
+  val: str,
+};
+
+type ContractEnum = struct {
+  enum_name: str,
+  enum_type: ContractEnumType,
+  variants: vec str,
+};
+
+type ContractEnumType = enum {
+  ContractInitActions,
+  ContractInitEvents,
+  ContractActions,
+  ContractEvents,
+  ContractStateActions,
+  ContractStateEvents,
+  ContractEnum,
+};
+
+type CodeBlock = enum {
+  ModifyState: StateAttributeToModify,
+  ControlFlow: ControlFlow,
+  Variable: Variable,
+  Assignment: struct { assignment: Assignment, scope: u32 },
+  LoadMessage: Variable,
+  SendMessage: struct { message: EnumVal, to: actor_id },
+  SendReply: struct { message: EnumVal },
+  Return: VirtualContractTypesVal,
+};
+
+type StateAttributeToModify = enum {
+  Vec: struct { attribute_name: str, action: VecActiosToModify },
+  String: struct { attribute_name: str, action: StringActionsToModify },
+  INum: struct { attribute_name: str, action: INumActionsToModify },
+  UNum: struct { attribute_name: str, action: UNumActionsToModify },
+  Enum: struct { attribute_name: str, variant: str },
+};
+
+type VecActiosToModify = enum {
+  ClearVec,
+  AddItem: TypesVal,
+};
+
+type TypesVal = enum {
+  VecVal: VirtualContractVecTypes,
+  ActorIdVal: actor_id,
+  INumVal: i64,
+  UNumVal: u64,
+  StringVal: str,
+  BooleanVal: bool,
+  EnumVal: EnumVal,
+  VariableVal: str,
+  TupleStringActorId: struct { str, actor_id },
+};
+
+type StringActionsToModify = enum {
+  ClearString,
+  ConcatString: str,
+  ChangeTo: str,
+};
+
+type INumActionsToModify = enum {
+  Add: u64,
+  Sub: u64,
+  Div: u64,
+  Mult: u64,
+  AddVariable: str,
+  RestVariable: str,
+  DivVariable: str,
+  MultVariable: str,
+};
+
+type UNumActionsToModify = enum {
+  Add: u64,
+  Sub: u64,
+  Div: u64,
+  Mult: u64,
+  AddVariable: str,
+  RestVariable: str,
+  DivVariable: str,
+  MultVariable: str,
+};
+
+type ControlFlow = enum {
+  If: struct { boolean_expresion: BooleanExpression, code_block: vec CodeBlock },
+  For: struct { expression: str, code_block: vec CodeBlock },
+  Match: struct { variable_to_match: str, enum_to_match: str, code_block: vec vec CodeBlock },
+  IfElse: struct { boolean_expresion: BooleanExpression, if_code_block: vec CodeBlock, else_code_block: vec CodeBlock },
+};
+
+type BooleanExpression = enum {
+  Simple: struct { first: VirtualContractTypesVal, second: VirtualContractTypesVal, expression_type: BooleanExpressionTypes },
+  FirstComplex: struct { first: Variable, second: VirtualContractTypesVal, expression_type: BooleanExpressionTypes },
+  SecondComplex: struct { first: VirtualContractTypesVal, second: Variable, expression_type: BooleanExpressionTypes },
+  Complex: struct { first: Variable, second: Variable, expression_type: BooleanExpressionTypes },
+};
+
+type BooleanExpressionTypes = enum {
+  Equal,
+  NotEqual,
+  GreaterThan,
+  LessThan,
+  GreaterThanEqual,
+  LessThanEqual,
+};
+
+type Variable = struct {
+  variable_name: str,
+  is_mutable: bool,
+  var_type: VirtualContractTypes,
+  var_value: VirtualContractTypesVal,
+  is_parameter: bool,
+};
+
+type Assignment = struct {
+  variable_name: str,
+  assignment_type: VirtualContractTypes,
+  assign: AssignmentType,
+};
+
+type AssignmentType = enum {
+  Add: VirtualContractTypesVal,
+  Subtract: VirtualContractTypesVal,
+  Multiply: VirtualContractTypesVal,
+  Divide: VirtualContractTypesVal,
+  Module: VirtualContractTypesVal,
+  NewValue: VirtualContractTypesVal,
+};
+
+type VirtualContractState = struct {
+  metadata: VirtualContractMetadata,
+  initialized: bool,
+  state: opt struct { str, opt ContractStructFormat },
+  enums: vec struct { str, ContractEnum },
+  structs: vec struct { str, ContractStructFormat },
+  init_code: vec CodeBlock,
+  handle_code: vec CodeBlock,
+  menssages_send: vec struct { actor_id, UsersMessages },
+};
+
+type UsersMessages = struct {
+  last_message_send: opt struct { str, str },
+  last_messages: vec struct { str, str },
+};
+
+type MessageFromVirtualContract = enum {
+  Message: EnumVal,
+  Error: VirtualContractErrors,
+};
+
+type VirtualContractErrors = enum {
+  ContractDontHaveEnum: str,
+  ContractDontHaveStruct: str,
+  ContractDontHaveState,
+  InitMetadataNotDefinedAndUsed,
+  InitMetadataContainsInexistentEnum: str,
+  HandleMetadataNotDefinedAndUsed,
+  MatchDoesNotHaveAllCases: str,
+  VariableDoesNotHaveName,
+  VariableDoesNotExixts: struct { variable_name: str },
+  VariableEnumIsNotTheSameForMatch: struct { variable_name: str, variable_enum: str, match_enum: str },
+  VariableIsNotAnEnumForMatch: struct { variable_name: str, variable_type: VirtualContractTypes },
+  VariableHasWrongTypes: struct { variable_name: str },
+  VariableDontFitInMatch: struct { variable_name: str, expected_variable: str },
+  VariantNotExistsInEnum: struct { enum_name: str, variant: str },
+  AttributeNotExistsInStruct: struct { struct_name: str, attribute: str },
+  BadAssingToStructAttribute: struct { expected: VirtualContractTypes },
+  ControlFlowDoesNotMatch: struct { expected: str },
+  MessageReceivedDontHaveCorrectEnum: struct { enum_of_message_received: str, expected_enum: str },
+  MessageToSendDontHaveCorrectEnum: struct { enum_of_message_received: str, expected_enum: str },
+  CantProcessMessageNoEnumIn: str,
+  CantSendMessageNoEnumIn: str,
+  MetadataInContractDoesNotExists: struct { metadata_variant_inexistent: str },
+  CantChangeStateAttribute: struct { reason: str, struct_state: str, struct_attribute: str },
+  ReplyMessageAlreadySend,
+  EnumNamenCantBeEmpty,
+  EnumVariantNameCantBeEmpty,
+  StructNameCantBeEmpty,
+  NameCantBeEmpty,
+};
+
+type SignlessAccount = struct {
+  address: str,
+  encoded: str,
+  encoding: SignlessEncodingData,
+  meta: SignlessMetaData,
+};
+
+type SignlessEncodingData = struct {
+  content: struct { str, str },
+  encoding_type: struct { str, str },
+  version: str,
+};
+
+type SignlessMetaData = struct {
+  name: str,
+};
+
+type ContractEvent = enum {
+  MeesageOfVirtualContract: EnumVal,
+  MessageOfInterpreter: InterpreterMessage,
+  VirtualContractAdded,
+  VirtualContractSet,
+  VirtualContractIdDoesNotExists: str,
+  AddressDoesNotHasVirtualContractId: struct { address: actor_id, virtual_contract_id: str },
+  NoWalletAccountDoesNotHasVirtualContractId: struct { no_wallet_account: str, virtual_contract_id: str },
+  SessionHasInvalidSignlessAccount,
+  UserDoesNotHasSignlessAccount,
+  NoVirtualContractStored,
+  ReservationMade,
+  NoReservationIdInContract,
+  SignlessAccountSet,
+  AccountAddressIsNotRegistered: actor_id,
+  NoWalletAccountIsNotRegister,
+  AllSignlessAccountDeleted,
+  SignlessAccountHasInvalidSession,
+  SignlessAccountNotApproved,
+};
+
+type InterpreterMessage = enum {
+  Error: VirtualContractErrors,
+  MessageProcessed,
+  MessagesToSend: vec MessageToSend,
+  VirtualContractCreated,
+  VirtualContractMetadataChecked,
+};
+
+type MessageToSend = struct {
+  to: actor_id,
+  message: EnumVal,
+  message_type_to_send: MessageTypeToSend,
+};
+
+type MessageTypeToSend = enum {
+  Reply,
+  Send,
+};
+
+type VirtualContractDataFromFrontend = struct {
+  metadata: VirtualContractMetadata,
+  state: opt struct { str, opt ContractStructFormat },
+  init_code: vec CodeBlock,
+  handle_code: vec CodeBlock,
+  enums: vec struct { str, ContractEnum },
+  structs: vec struct { str, ContractStructFormat },
+};
+
+constructor {
+  New : ();
+};
+
+service Query {
+  query AllVirtualContractsDataFromAddress : (address: actor_id) -> ContractStateReply;
+  query AllVirtualContractsDataFromNoWalletAccount : (no_wallet_account: str) -> ContractStateReply;
+  query LastVirtualContractSavedFromAddress : (address: actor_id) -> ContractStateReply;
+  query LastVirtualContractSavedFromNoWalletAccount : (no_wallet_account: str) -> ContractStateReply;
+  query MessagesFromVirtualContract : (address: actor_id) -> ContractStateReply;
+  query SignlessAccountAddressForAddress : (user_address: actor_id) -> ContractStateReply;
+  query SignlessAccountAddressForNoWalletAccount : (no_wallet_account: str) -> ContractStateReply;
+  query SignlessAccountData : (signless_address: actor_id) -> ContractStateReply;
+  query VirtualContractDataFromId : (virtual_contract_id: str) -> ContractStateReply;
+  query VirtualContractFromId : (virtual_contract_id: str) -> ContractStateReply;
+  query VirtualContractMetadataFromId : (virtual_contract_id: str) -> ContractStateReply;
+  query VirtualContractStateFromId : (virtual_contract_id: str) -> ContractStateReply;
+};
+
+service Signless {
+  BindSignlessDataToAddress : (user_account: actor_id, signless_data: SignlessAccount) -> ContractEvent;
+  BindSignlessDataToNoWalletAccount : (no_wallet_account: str, signless_data: SignlessAccount) -> ContractEvent;
+};
+
+service VirtualContracts {
+  AddVirtualContractToAddress : (user_account: opt actor_id, virtual_contract: VirtualContractDataFromFrontend, virtual_contract_id: str) -> ContractEvent;
+  AddVirtualContractToNoWalletAccount : (no_wallet_account: str, virtual_contract: VirtualContractDataFromFrontend, virtual_contract_id: str) -> ContractEvent;
+  SendMessageToVirtualContractWithAddress : (user_account: opt actor_id, message: EnumVal, virtual_contract_id: str) -> ContractEvent;
+  SendMessageToVirtualContractWithNoWalletAccount : (no_wallet_account: str, message: EnumVal, virtual_contract_id: str) -> ContractEvent;
+};
+

@@ -9,14 +9,7 @@ export type Result<T, E = Error> =
     { ok: false; error: E };
 
 
-
-export interface SignlessSession {
-    accountName: string,
-    password: string
-}
-
-
-
+    
 
 
 export type EnumName = string;
@@ -46,10 +39,10 @@ export interface SignlessMetaData {
 
 
 export type MetadataTypes =
-    { In: [EnumName] } |
-    { Out: [EnumName] } |
-    { InOut: [EnumName, EnumName] } |
-    { NoValue: null };
+    { in: [EnumName] } |
+    { out: [EnumName] } |
+    { inOut: [EnumName, EnumName] } |
+    { noValue: null };
 
 export interface VirtualContractMetadata {
     init: MetadataTypes,
@@ -67,7 +60,7 @@ export interface VirtualContractDataToSend {
     structs: [StructName, ContractStruct][]
 }
 
-export interface VirtualContractState {
+export interface VirtualContractDataFromContract {
     metadata: VirtualContractMetadata,
     initialized: boolean,
     state: [EnumName, ContractStruct | null] | null,

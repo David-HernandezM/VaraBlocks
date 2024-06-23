@@ -21,24 +21,35 @@ import { TreeItem } from "@/components/DndLibrary/Tree/types";
 import { KeyringPair } from '@polkadot/keyring/types';
 import { MAIN_CONTRACT } from "@/app/consts";
 
+
+
+
+
+import { VirtualContractDataFromContract } from "@/app/app_types/types";
+
+
+
+import {
+apiIsBusy
+} from "@/app/SliceReducers";
+
+
 import './ButtonActionsForBlocks.scss';
 
 interface Props {
     initCodeEditionOpen: boolean,
     handleCodeEditionOpen: boolean,
-    signlessAccountData: KeyringPair | null
+    signlessAccountData: KeyringPair | null,
+    virtualContractAddress: string | null
 }
 
-export const ButtonActionsForBlocks = ({ initCodeEditionOpen, handleCodeEditionOpen, signlessAccountData }: Props) => {
+export const ButtonActionsForBlocks = ({ initCodeEditionOpen, handleCodeEditionOpen, signlessAccountData, virtualContractAddress }: Props) => {
     const initMetadata = useAppSelector((state) => state.VaraBlocksData.initMetadata);
     const handleMetadata = useAppSelector((state) => state.VaraBlocksData.handleMetadata);
     const enumsData = useAppSelector((state) => state.VaraBlocksData.enums);
     const loadMessageBlocks = useAppSelector((state) => state.VaraBlocksData.loadMessagesBlocks);
     const variableBlocks = useAppSelector((state) => state.VaraBlocksData.variablesBlocks);
-    const {
-        
-    } = useSignlessUtils();
-    const { sendMessage } = useContractUtils();
+    const { sendMessage, readState } = useContractUtils();
     const account = useAccount();
     const alert = useAlert();
     const dispatch = useAppDispatch();
@@ -250,11 +261,6 @@ export const ButtonActionsForBlocks = ({ initCodeEditionOpen, handleCodeEditionO
                 Send Reply
             </Button>
             {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
-                console.log("Agregar variable");
-            }}>
-                Change state
-            </Button> */}
-            {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
                 const blockId = generatePassword();
 
                 const blockToSave: TreeItem = {
@@ -371,6 +377,39 @@ export const ButtonActionsForBlocks = ({ initCodeEditionOpen, handleCodeEditionO
                 }));
             }}>
                 Add match
+            </Button>
+
+            <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
+                
+                // const test = await readState(
+
+                // );
+
+                // if (!virtualContractAddress) {
+                //     alert.error('No se a pasado una virtual address de una cuenta!!');
+                //     return;
+                // }
+
+                // const contractState: any = await readState(
+                //     MAIN_CONTRACT.programId,
+                //     MAIN_CONTRACT.programMetadata,
+                //     {
+                //         VirtualContractData: virtualContractAddress
+                //     }
+                // );
+
+                // const { virtualContractData } = contractState;
+
+                // console.log('Contract state from contract');
+                // console.log(virtualContractData as VirtualContractDataFromContract);
+                
+            }}>
+                Get Contract Data of Actual contract.
+            </Button>
+            <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={async () => {
+                dispatch(apiIsBusy(false));
+            }}>
+                Set App is busy false
             </Button>
             {/* <Button size={"small"} textSize={"medium"} textWeight={"weight2"} rounded={"rounded4"} width={"normal"} onClick={() => {
                 // console.log("Checando state");

@@ -9,9 +9,14 @@ import { useAlert } from '@gear-js/react-hooks';
 import { signlessDataContext } from '@/app/Context';
 import { KeyringPair } from '@polkadot/keyring/types';
 import { MAIN_CONTRACT } from '@/app/consts';
+import { 
+    setNoWalletEncryptedName, 
+    setSignlessAddress 
+} from '@/app/SliceReducers';
 import CryptoJs from 'crypto-js';
 
 import './SignlessForm.scss';
+import { decodeAddress } from '@gear-js/api';
 
 interface Props {
     close: () => void,
@@ -29,7 +34,7 @@ const DEFAULT_VALUES: FormData = {
 };
 
 export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
-    const {setSignlessData, setNoWalletAccountName} = useContext(signlessDataContext);
+    const {setSignlessData} = useContext(signlessDataContext);
 
     const actualSessionHasPolkadotAccount = useAppSelector((state) => state.AccountsSettings.polkadotEnable);
     const apiIsReady = useAppSelector((state) => state.AccountsSettings.apiStarted);
@@ -37,6 +42,7 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
     const apiIsDisconnected = useAppSelector((state) => state.AccountsSettings.apiIsDisconnected);
     const dispatch = useAppDispatch();
     const alert = useAlert();
+
     const { register, handleSubmit, formState } = useForm({ defaultValues: DEFAULT_VALUES });
 
     const { errors } = formState;
@@ -78,10 +84,10 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
             
             setSignlessData(noWalletNewSignlessData);
         }
-        if (setNoWalletAccountName) setNoWalletAccountName(encryptedAccount);
 
         alert.success('Signless account set!');
-
+        dispatch(setSignlessAddress(decodeAddress(noWalletNewSignlessData.address)));
+        dispatch(setNoWalletEncryptedName(encryptedAccount));
         dispatch(apiIsBusy(false));
         close();
 
@@ -119,7 +125,9 @@ export const SignlessForm = ({ close, onDataCollected }: Props) =>  {
                     console.log('SE GUARDO LA CUENTA SIGNLESS!!!');
                     setSignlessData(keyringPair);
                 }
-                if (setNoWalletAccountName) setNoWalletAccountName(noWalletAccount);
+                
+                dispatch(setSignlessAddress(decodeAddress(keyringPair.address)));
+                dispatch(setNoWalletEncryptedName(encryptedAccount));
 
                 alert.success('Signless account set!');
                 close();
